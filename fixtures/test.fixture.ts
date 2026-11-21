@@ -3,6 +3,7 @@ import { LoginPage } from '../pages/auth/login.page';
 import { SignupPage } from '../pages/auth/signup.page';
 import { ForgotPasswordPage } from '../pages/auth/forgot-password.page';
 import { SetPasswordPage } from '../pages/auth/set-password.page';
+import { YopmailPage } from '../pages/mail/yopmail.page';
 import { DashboardPage } from '../pages/dashboard.page';
 import { JourneysPage } from '../pages/journeys.page';
 import { NotesPage } from '../pages/notes.page';
@@ -15,6 +16,7 @@ type AppFixtures = {
   signupPage: SignupPage;
   forgotPasswordPage: ForgotPasswordPage;
   setPasswordPage: SetPasswordPage;
+  yopmailPage: YopmailPage;
   dashboardPage: DashboardPage;
   journeysPage: JourneysPage;
   notesPage: NotesPage;
@@ -28,6 +30,7 @@ export const test = base.extend<AppFixtures>({
   signupPage: async ({ page }, use) => use(new SignupPage(page)),
   forgotPasswordPage: async ({ page }, use) => use(new ForgotPasswordPage(page)),
   setPasswordPage: async ({ page }, use) => use(new SetPasswordPage(page)),
+  yopmailPage: async ({ page }, use) => use(new YopmailPage(page)),
   dashboardPage: async ({ page }, use) => use(new DashboardPage(page)),
   journeysPage: async ({ page }, use) => use(new JourneysPage(page)),
   notesPage: async ({ page }, use) => use(new NotesPage(page)),
