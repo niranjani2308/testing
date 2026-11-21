@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/test.fixture';
 import { authTestData } from '../../test-data/auth.data';
+import { YopmailPage } from '../../pages/mail/yopmail.page';
 
 test.describe('Create Account - Functional End-to-End Registration & Yopmail Verification', () => {
   // Execute sequentially to respect email service and rate limits
@@ -8,9 +9,8 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
   test('TC-SIGNUP-E2E-001: Complete flow - Register random user, activate via Yopmail token & login to dashboard', async ({
     signupPage,
     setPasswordPage,
-    yopmailPage,
     loginPage,
-    browser,
+    context,
     page,
   }) => {
     // Generate a fresh random test user with compliant 8-character password and Yopmail inbox
@@ -24,7 +24,7 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
         resp.url().includes('/auth/register') &&
         (resp.status() === 200 || resp.status() === 201),
       { timeout: 15000 },
-    ).catch(() => null);
+    );
 
     await signupPage.goto();
     await expect(signupPage.authCard).toBeVisible();
@@ -44,29 +44,26 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     let verificationUrl = '';
 
     // A. Extract link from the server registration dispatch
-    const registerResponse = await registerResponsePromise;
-    if (registerResponse) {
-      try {
-        const body = await registerResponse.json();
-        if (body.link) {
-          verificationUrl = body.link;
-        }
-      } catch {
-        // Fallback to inbox check
+    try {
+      const registerResponse = await registerResponsePromise;
+      const body = (await registerResponse.json()) as { link?: string };
+      if (body && body.link) {
+        verificationUrl = body.link;
       }
+    } catch {
+      // If network response was not captured, proceed to inbox check
     }
 
-    // B. Check Yopmail inbox if external link is also desired
+    // B. Check Yopmail inbox in a secondary tab if needed
     try {
-      const mailContext = await browser.newContext();
-      const mailPage = await mailContext.newPage();
-      const yopmail = new yopmailPage.constructor(mailPage);
+      const mailPage = await context.newPage();
+      const yopmail = new YopmailPage(mailPage);
       await yopmail.gotoInbox(randomUser.yopmailInbox);
       const linkFromMail = await yopmail.getVerificationLink(3, 2000).catch(() => '');
       if (linkFromMail) {
         verificationUrl = linkFromMail;
       }
-      await mailContext.close();
+      await mailPage.close();
     } catch {
       // Graceful fallback to intercepted verificationUrl
     }
@@ -84,7 +81,8 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     // STEP 4: Set Password and Activate Account
     // -----------------------------------------------------------------------
     const isFormVisible = await setPasswordPage.newPasswordInput
-      .isVisible({ timeout: 8000 })
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .then(() => true)
       .catch(() => false);
 
     if (isFormVisible) {
