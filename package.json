@@ -14,11 +14,17 @@
     "pretest:login": "node scripts/clean-results.js",
     "pretest:login:ui": "node scripts/clean-results.js",
     "test": "playwright test",
+    "test:auth": "playwright test tests/auth/",
+    "test:ui-flows": "playwright test tests/auth/signup.spec.ts tests/auth/set-password.spec.ts tests/auth/login*.spec.ts tests/auth/forgot-password.spec.ts tests/auth/reset-password.spec.ts",
+    "test:e2e": "playwright test tests/auth/signup-functional-yopmail.spec.ts --headed",
+    "test:api": "playwright test tests/auth/api-auth.spec.ts",
+    "test:throttling": "playwright test tests/auth/throttling.spec.ts",
     "test:ui": "playwright test --ui",
     "test:login": "playwright test tests/auth/login*",
     "test:login:ui": "playwright test tests/auth/login* --ui",
     "test:headed": "playwright test --headed",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "report:summary": "node scripts/generate-markdown-report.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

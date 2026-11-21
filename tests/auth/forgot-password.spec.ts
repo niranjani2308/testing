@@ -263,3 +263,164 @@ test.describe('Forgot Password Page - UI, Validation & Recovery Tests', () => {
     });
   });
 });
+
+// =============================================================================
+// RESET PASSWORD TESTS (Positive & Negative Token Security & Form Validations)
+// =============================================================================
+test.describe('Reset Password Page - Security, Rules & Reset Flow', () => {
+  test('TC-RESETPW-SEC-001: (Negative) Direct access without token should show Invalid Link state', async ({
+    resetPasswordPage,
+  }) => {
+    await resetPasswordPage.goto();
+
+    await expect(resetPasswordPage.invalidCardTitle).toBeVisible();
+    await expect(resetPasswordPage.invalidCardTitle).toHaveText(authTestData.resetPasswordUiText.invalidTitle);
+
+    await expect(resetPasswordPage.newPasswordInput).not.toBeVisible();
+    await expect(resetPasswordPage.confirmPasswordInput).not.toBeVisible();
+    await expect(resetPasswordPage.submitButton).not.toBeVisible();
+  });
+
+  test('TC-RESETPW-SEC-002: (Positive) Invalid Link buttons should navigate to Forgot Password and Login', async ({
+    resetPasswordPage,
+    page,
+  }) => {
+    await resetPasswordPage.goto();
+
+    await expect(resetPasswordPage.requestFreshResetLinkBtn).toBeVisible();
+    await expect(resetPasswordPage.backToLoginBtn).toBeVisible();
+
+    await resetPasswordPage.clickRequestFreshLink();
+    await expect(page).toHaveURL(new RegExp(authTestData.links.forgotPasswordPath));
+
+    await resetPasswordPage.goto();
+    await resetPasswordPage.clickBackToLogin();
+    await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath));
+  });
+
+  test('TC-RESETPW-SEC-003: (Negative) Navigation with invalid/tampered token should show security rejection', async ({
+    resetPasswordPage,
+  }) => {
+    await resetPasswordPage.goto('tampered_fake_token_12345');
+
+    await expect(
+      resetPasswordPage.invalidCardTitle.or(resetPasswordPage.errorAlert),
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test('TC-RESETPW-SEC-004: (Negative) Expired token should render Link Expired card with alert and NO form', async ({
+    resetPasswordPage,
+    page,
+  }) => {
+    await page.route('**/auth/validate-token*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          valid: false,
+          reason: 'expired',
+          message: 'Password reset link has expired (exceeded 2 minutes). Please request a new one.',
+        }),
+      });
+    });
+
+    await resetPasswordPage.goto('mock_expired_reset_token');
+
+    await expect(resetPasswordPage.expiredCardTitle).toBeVisible({ timeout: 10000 });
+    await expect(resetPasswordPage.expiredCardTitle).toHaveText(authTestData.resetPasswordUiText.expiredTitle);
+    await expect(resetPasswordPage.expiredAlertTitle).toBeVisible();
+
+    await expect(resetPasswordPage.newPasswordInput).not.toBeVisible();
+    await expect(resetPasswordPage.confirmPasswordInput).not.toBeVisible();
+    await expect(resetPasswordPage.submitButton).not.toBeVisible();
+  });
+
+  test('TC-RESETPW-RULES-001: (Positive) Valid 8-char password should satisfy all 7 rules', async ({
+    resetPasswordPage,
+    page,
+  }) => {
+    await page.route('**/auth/validate-token*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ valid: true }),
+      });
+    });
+
+    await resetPasswordPage.goto('mock_valid_reset_token');
+
+    const validPass = authTestData.generators.validPassword();
+    await resetPasswordPage.fillNewPassword(validPass);
+
+    await expect(resetPasswordPage.ruleMinLength).toContainText('✓');
+    await expect(resetPasswordPage.ruleMaxLength).toContainText('✓');
+    await expect(resetPasswordPage.ruleUppercase).toContainText('✓');
+    await expect(resetPasswordPage.ruleLowercase).toContainText('✓');
+    await expect(resetPasswordPage.ruleNumber).toContainText('✓');
+    await expect(resetPasswordPage.ruleSpecial).toContainText('✓');
+    await expect(resetPasswordPage.ruleNoSpaces).toContainText('✓');
+  });
+
+  test('TC-RESETPW-MISMATCH-001: (Negative) Mismatched confirm password shows error on submit', async ({
+    resetPasswordPage,
+    page,
+  }) => {
+    await page.route('**/auth/validate-token*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ valid: true }),
+      });
+    });
+
+    await resetPasswordPage.goto('mock_valid_reset_token');
+
+    const p1 = authTestData.generators.validPassword();
+    const p2 = authTestData.generators.validPassword();
+    await resetPasswordPage.fillNewPassword(p1);
+    await resetPasswordPage.fillConfirmPassword(p1 === p2 ? 'Diff9$xy' : p2);
+    await resetPasswordPage.clickSubmit();
+
+    await expect(resetPasswordPage.confirmPasswordError).toBeVisible();
+    await expect(resetPasswordPage.confirmPasswordError).toContainText(
+      authTestData.resetPasswordValidationMessages.passwordMismatch,
+    );
+  });
+
+  test('TC-RESETPW-SUCCESS-001: (Positive) Submitting valid password shows Password Reset Complete! and redirects to /login', async ({
+    resetPasswordPage,
+    page,
+  }) => {
+    await page.route('**/auth/validate-token*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ valid: true }),
+      });
+    });
+
+    await page.route('**/auth/reset-password', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'Your password has been successfully reset! You can now log in with your new password.',
+        }),
+      });
+    });
+
+    await resetPasswordPage.goto('mock_valid_reset_token');
+
+    const validPass = authTestData.generators.validPassword();
+    await resetPasswordPage.fillNewPassword(validPass);
+    await resetPasswordPage.fillConfirmPassword(validPass);
+    await resetPasswordPage.clickSubmit();
+
+    await expect(resetPasswordPage.successCard).toBeVisible({ timeout: 5000 });
+    await expect(resetPasswordPage.successTitle).toHaveText(
+      authTestData.resetPasswordUiText.successTitle,
+    );
+
+    await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 10000 });
+  });
+});
