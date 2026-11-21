@@ -66,8 +66,8 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await expect(signupPage.successCard).toBeVisible({ timeout: 15000 });
     await expect(signupPage.successTitle).toContainText(authTestData.signupUiText.successTitle);
     await expect(signupPage.successDescription).toContainText(randomUser.email);
-    console.log('✅ [STEP 1 COMPLETE] Verification email sent successfully.');
-    await page.waitForTimeout(1500);
+    console.log('✅ [STEP 1 COMPLETE] Verification email sent successfully. Waiting 5s for delivery...');
+    await page.waitForTimeout(5000);
 
     // -------------------------------------------------------------------------
     // STEP 2: YOPMAIL — RETRIEVE VERIFICATION LINK (IN SAME TAB)
@@ -183,8 +183,8 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await expect(forgotPasswordPage.successTitle).toContainText(
       authTestData.forgotPasswordUiText.successTitle,
     );
-    console.log('✅ [STEP 5 COMPLETE] Password reset link dispatched successfully.');
-    await page.waitForTimeout(1500);
+    console.log('✅ [STEP 5 COMPLETE] Password reset link dispatched. Waiting 5s for delivery...');
+    await page.waitForTimeout(5000);
 
     // -------------------------------------------------------------------------
     // STEP 6: YOPMAIL — RETRIEVE RESET LINK & SET NEW PASSWORD

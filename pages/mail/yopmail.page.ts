@@ -125,6 +125,23 @@ export class YopmailPage {
   }
 
   /**
+   * Checks whether YOPmail is displaying its temporary rate limit screen
+   * ("Please wait before continuing. Try again in X min Y s.")
+   */
+  async isRateLimited(): Promise<boolean> {
+    try {
+      const waitMsg = this.inboxFrame.locator('text="Please wait before continuing"');
+      if (await waitMsg.isVisible({ timeout: 500 }).catch(() => false)) {
+        return true;
+      }
+      const waitMsgPage = this.page.locator('text="Please wait before continuing"');
+      return await waitMsgPage.isVisible({ timeout: 500 }).catch(() => false);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Attempt to dismiss GDPR or cookie banners if shown by Yopmail.
    */
   async dismissConsent(): Promise<void> {
@@ -192,6 +209,20 @@ export class YopmailPage {
           await this.waitForHumanVerification();
         }
 
+        // If YOPmail is showing temporary rate-limiting screen
+        if (await this.isRateLimited()) {
+          console.log('⚠️  [Yopmail] Cooldown active ("Please wait before continuing"). Waiting before retry...');
+          await this.page.waitForTimeout(8000);
+          continue;
+        }
+
+        // If YOPmail is showing temporary rate-limiting screen
+        if (await this.isRateLimited()) {
+          console.log('⚠️  [Yopmail] Cooldown active ("Please wait before continuing"). Waiting before retry...');
+          await this.page.waitForTimeout(8000);
+          continue;
+        }
+
         // Look for email rows inside the inbox iframe (#ifinbox)
         const mailRows = this.inboxFrame.locator('.m, .lm, button.lm, a.lm, div.m');
         const count = await mailRows.count();
@@ -249,6 +280,13 @@ export class YopmailPage {
 
         if (await this.isHumanVerificationPresent()) {
           await this.waitForHumanVerification();
+        }
+
+        // If YOPmail is showing temporary rate-limiting screen
+        if (await this.isRateLimited()) {
+          console.log('⚠️  [Yopmail] Cooldown active ("Please wait before continuing"). Waiting before retry...');
+          await this.page.waitForTimeout(8000);
+          continue;
         }
 
         const mailRows = this.inboxFrame.locator('.m, .lm, button.lm, a.lm, div.m');
