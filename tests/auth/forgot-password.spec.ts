@@ -423,4 +423,87 @@ test.describe('Reset Password Page - Security, Rules & Reset Flow', () => {
 
     await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 10000 });
   });
+
+  // =========================================================================
+  // CATEGORY 7: UI PADDING, MARGIN, STYLING & RESPONSIVE VIEWPORTS
+  // =========================================================================
+  test.describe('7. UI Padding, Margin, Styling & Responsive Verification', () => {
+    test('TC-FORGOT-STYLE-001: Auth card has valid padding, rounded corners, and max-width', async ({
+      forgotPasswordPage,
+    }) => {
+      await forgotPasswordPage.goto();
+
+      const cardStyles = await forgotPasswordPage.authCard.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          backgroundColor: computed.backgroundColor,
+          maxWidth: computed.maxWidth,
+          paddingTop: parseFloat(computed.paddingTop),
+          borderRadius: parseFloat(computed.borderRadius),
+        };
+      });
+
+      expect(cardStyles.backgroundColor).toBe('rgb(255, 255, 255)');
+      expect(cardStyles.maxWidth).toBe('448px');
+      expect(cardStyles.paddingTop).toBeGreaterThanOrEqual(16);
+      expect(cardStyles.borderRadius).toBeGreaterThanOrEqual(8);
+    });
+
+    test('TC-FORGOT-RESP-001: Forgot Password renders cleanly across Desktop, Tablet, and Mobile viewports', async ({
+      forgotPasswordPage,
+      page,
+    }) => {
+      // Desktop
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await forgotPasswordPage.goto();
+      await expect(forgotPasswordPage.authCard).toBeVisible();
+
+      // Tablet
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await expect(forgotPasswordPage.authCard).toBeVisible();
+
+      // Mobile
+      await page.setViewportSize({ width: 375, height: 667 });
+      await expect(forgotPasswordPage.authCard).toBeVisible();
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 8: UNWANTED WORDS & CONTENT HYGIENE VERIFICATION
+  // =========================================================================
+  test.describe('8. Unwanted Words & Content Hygiene Verification', () => {
+    test('TC-FORGOT-WORDS-001: Forgot Password view must not contain unwanted or debug words', async ({
+      forgotPasswordPage,
+      page,
+    }) => {
+      await forgotPasswordPage.goto();
+
+      const bodyText = await page.locator('body').innerText();
+      for (const word of authTestData.unwantedWords) {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        expect(regex.test(bodyText), `Found unwanted word "${word}" in Forgot Password view!`).toBe(false);
+      }
+    });
+
+    test('TC-RESETPW-WORDS-001: Reset Password view must not contain unwanted or debug words', async ({
+      resetPasswordPage,
+      page,
+    }) => {
+      await page.route('**/auth/validate-token*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ valid: true }),
+        });
+      });
+
+      await resetPasswordPage.goto('mock_valid_token');
+
+      const bodyText = await page.locator('body').innerText();
+      for (const word of authTestData.unwantedWords) {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        expect(regex.test(bodyText), `Found unwanted word "${word}" in Reset Password view!`).toBe(false);
+      }
+    });
+  });
 });

@@ -518,4 +518,113 @@ test.describe('Set Password Page - UI, Security & Validation Tests', () => {
       );
     });
   });
+
+  // =========================================================================
+  // CATEGORY 8: UI PADDING, MARGIN, STYLING & RESPONSIVE DESIGN
+  // =========================================================================
+  test.describe('8. UI Padding, Margin, Styling & Responsive Verification', () => {
+    test('TC-SETPW-STYLE-001: Auth card has correct padding, background color, and rounded corners', async ({
+      setPasswordPage,
+    }) => {
+      await setPasswordPage.goto();
+
+      const cardStyles = await setPasswordPage.authCard.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          backgroundColor: computed.backgroundColor,
+          maxWidth: computed.maxWidth,
+          paddingTop: parseFloat(computed.paddingTop),
+          borderRadius: parseFloat(computed.borderRadius),
+        };
+      });
+
+      expect(cardStyles.backgroundColor).toBe('rgb(255, 255, 255)');
+      expect(cardStyles.maxWidth).toBe('448px');
+      expect(cardStyles.paddingTop).toBeGreaterThanOrEqual(16);
+      expect(cardStyles.borderRadius).toBeGreaterThanOrEqual(8);
+    });
+
+    test('TC-SETPW-STYLE-002: Password requirements container has distinct background and padding', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      await page.route('**/auth/validate-token*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ valid: true }),
+        });
+      });
+
+      await setPasswordPage.goto('mock_valid_token');
+
+      const rulesBoxStyles = await setPasswordPage.passwordRulesContainer.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          paddingTop: parseFloat(computed.paddingTop),
+          borderRadius: parseFloat(computed.borderRadius),
+        };
+      });
+
+      expect(rulesBoxStyles.paddingTop).toBeGreaterThanOrEqual(8);
+      expect(rulesBoxStyles.borderRadius).toBeGreaterThanOrEqual(6);
+    });
+
+    test('TC-SETPW-RESP-001: Renders cleanly across Mobile, Tablet, and Desktop viewports', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      // Desktop
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await setPasswordPage.goto();
+      await expect(setPasswordPage.blockedCardTitle).toBeVisible();
+
+      // Tablet
+      await page.setViewportSize({ width: 768, height: 1024 });
+      await expect(setPasswordPage.blockedCardTitle).toBeVisible();
+
+      // Mobile
+      await page.setViewportSize({ width: 375, height: 667 });
+      await expect(setPasswordPage.blockedCardTitle).toBeVisible();
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 9: UNWANTED WORDS & CONTENT HYGIENE VERIFICATION
+  // =========================================================================
+  test.describe('9. Unwanted Words & Content Hygiene Verification', () => {
+    test('TC-SETPW-WORDS-001: Blocked screen must not contain unwanted or debug words', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      await setPasswordPage.goto();
+
+      const bodyText = await page.locator('body').innerText();
+      for (const word of authTestData.unwantedWords) {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        expect(regex.test(bodyText), `Found unwanted word "${word}" on blocked screen!`).toBe(false);
+      }
+    });
+
+    test('TC-SETPW-WORDS-002: Form screen must not contain unwanted or debug words', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      await page.route('**/auth/validate-token*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ valid: true }),
+        });
+      });
+
+      await setPasswordPage.goto('mock_valid_token');
+
+      const bodyText = await page.locator('body').innerText();
+      for (const word of authTestData.unwantedWords) {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        expect(regex.test(bodyText), `Found unwanted word "${word}" on password form!`).toBe(false);
+      }
+    });
+  });
 });

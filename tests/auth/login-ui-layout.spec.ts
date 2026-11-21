@@ -149,4 +149,53 @@ test.describe('Login Page - UI Text & Layout Tests', () => {
     await expect(loginPage.cardTitle).toHaveClass(/font-bold/);
     await expect(loginPage.cardTitle).toHaveClass(/text-slate-900/);
   });
+
+  // ==========================================
+  // Category 3: Computed Styles & Spacing Metrics
+  // ==========================================
+
+  test('TC-LOGIN-STYLE-001: Verify auth card computed padding, background, and max width', async ({ loginPage }) => {
+    const cardStyles = await loginPage.authCard.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        backgroundColor: computed.backgroundColor,
+        maxWidth: computed.maxWidth,
+        paddingTop: parseFloat(computed.paddingTop),
+        borderRadius: parseFloat(computed.borderRadius),
+      };
+    });
+
+    expect(cardStyles.backgroundColor).toBe('rgb(255, 255, 255)');
+    expect(cardStyles.maxWidth).toBe('448px');
+    expect(cardStyles.paddingTop).toBeGreaterThanOrEqual(16);
+    expect(cardStyles.borderRadius).toBeGreaterThanOrEqual(8);
+  });
+
+  test('TC-LOGIN-STYLE-002: Verify Login button padding and cursor styling', async ({ loginPage }) => {
+    const btnStyles = await loginPage.submitButton.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        paddingTop: parseFloat(computed.paddingTop),
+        paddingBottom: parseFloat(computed.paddingBottom),
+        cursor: computed.cursor,
+      };
+    });
+
+    expect(btnStyles.paddingTop).toBeGreaterThanOrEqual(8);
+    expect(btnStyles.paddingBottom).toBeGreaterThanOrEqual(8);
+    expect(btnStyles.cursor).toBe('pointer');
+  });
+
+  // ==========================================
+  // Category 4: Content Hygiene & Unwanted Words Check
+  // ==========================================
+
+  test('TC-LOGIN-WORDS-001: Login page content must not contain unwanted, dummy, or debug words', async ({ page }) => {
+    const bodyText = await page.locator('body').innerText();
+
+    for (const word of authTestData.unwantedWords) {
+      const regex = new RegExp(`\\b${word}\\b`, 'i');
+      expect(regex.test(bodyText), `Found unwanted word "${word}" in Login page!`).toBe(false);
+    }
+  });
 });

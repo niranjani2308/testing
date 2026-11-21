@@ -202,6 +202,32 @@ export const authTestData = {
       `Confirm password exceeds 8-character limit (${currentLength}/8 characters)`,
   },
 
+  // List of unwanted, dummy, or debug words that should NEVER appear in the production UI
+  unwantedWords: [
+    'undefined',
+    'null',
+    'NaN',
+    '[object Object]',
+    'TODO',
+    'FIXME',
+    'Lorem ipsum',
+    'sample text',
+    'dummy',
+    'test test',
+  ],
+
+  // Expected CSS Styling, Spacing & Box Model Metrics for UI Testing
+  uiStyling: {
+    authCard: {
+      maxWidth: '448px', // max-w-md (28rem)
+      backgroundColor: 'rgb(255, 255, 255)', // bg-white
+    },
+    submitButton: {
+      display: 'inline-flex',
+      cursor: 'pointer',
+    },
+  },
+
   // Dynamic Test Data Generators for Random Users, Passwords & Yopmail
   generators: {
     randomUsername: generateRandomUsername,

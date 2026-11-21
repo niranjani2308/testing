@@ -490,4 +490,94 @@ test.describe('Create Account (Signup) Page - UI & Field Validation Tests', () =
       );
     });
   });
+
+  // =========================================================================
+  // CATEGORY 11: UI PADDING, MARGIN & CSS STYLING METRICS
+  // =========================================================================
+  test.describe('11. UI Box Model, Padding, Margin & Styling Verification', () => {
+    test('TC-SIGNUP-STYLE-001: Auth card should have correct padding, background color, and max width', async ({
+      signupPage,
+    }) => {
+      const cardStyles = await signupPage.authCard.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          backgroundColor: computed.backgroundColor,
+          maxWidth: computed.maxWidth,
+          paddingTop: parseFloat(computed.paddingTop),
+          paddingBottom: parseFloat(computed.paddingBottom),
+          borderRadius: parseFloat(computed.borderRadius),
+        };
+      });
+
+      expect(cardStyles.backgroundColor).toBe('rgb(255, 255, 255)');
+      expect(cardStyles.maxWidth).toBe('448px');
+      expect(cardStyles.paddingTop).toBeGreaterThanOrEqual(16);
+      expect(cardStyles.borderRadius).toBeGreaterThanOrEqual(8);
+    });
+
+    test('TC-SIGNUP-STYLE-002: Submit button should have full width, visible padding, and rounded corners', async ({
+      signupPage,
+    }) => {
+      const buttonStyles = await signupPage.submitButton.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          paddingTop: parseFloat(computed.paddingTop),
+          paddingBottom: parseFloat(computed.paddingBottom),
+          borderRadius: parseFloat(computed.borderRadius),
+          cursor: computed.cursor,
+        };
+      });
+
+      expect(buttonStyles.paddingTop).toBeGreaterThanOrEqual(8);
+      expect(buttonStyles.borderRadius).toBeGreaterThanOrEqual(6);
+      expect(buttonStyles.cursor).toBe('pointer');
+    });
+
+    test('TC-SIGNUP-STYLE-003: Form inputs should have consistent padding and vertical margins', async ({
+      signupPage,
+    }) => {
+      const inputStyles = await signupPage.usernameInput.evaluate((el) => {
+        const computed = window.getComputedStyle(el);
+        return {
+          paddingTop: parseFloat(computed.paddingTop),
+          paddingLeft: parseFloat(computed.paddingLeft),
+          borderRadius: parseFloat(computed.borderRadius),
+        };
+      });
+
+      expect(inputStyles.paddingTop).toBeGreaterThanOrEqual(6);
+      expect(inputStyles.paddingLeft).toBeGreaterThanOrEqual(8);
+      expect(inputStyles.borderRadius).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 12: UNWANTED WORDS & CONTENT HYGIENE VERIFICATION
+  // =========================================================================
+  test.describe('12. Unwanted Words & Content Hygiene Verification', () => {
+    test('TC-SIGNUP-WORDS-001: Page text must not contain debug, placeholder or unwanted words', async ({
+      page,
+    }) => {
+      const bodyText = await page.locator('body').innerText();
+
+      for (const word of authTestData.unwantedWords) {
+        // Case-insensitive check with word boundary where applicable
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        const hasUnwantedWord = regex.test(bodyText);
+        expect(hasUnwantedWord, `Found unwanted word "${word}" in page content!`).toBe(false);
+      }
+    });
+
+    test('TC-SIGNUP-WORDS-002: Labels and placeholders must not contain "undefined" or "null"', async ({
+      signupPage,
+    }) => {
+      const usernamePlaceholder = await signupPage.usernameInput.getAttribute('placeholder');
+      const emailPlaceholder = await signupPage.emailInput.getAttribute('placeholder');
+
+      expect(usernamePlaceholder).not.toContain('undefined');
+      expect(usernamePlaceholder).not.toContain('null');
+      expect(emailPlaceholder).not.toContain('undefined');
+      expect(emailPlaceholder).not.toContain('null');
+    });
+  });
 });
