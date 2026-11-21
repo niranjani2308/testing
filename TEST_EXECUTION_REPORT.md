@@ -10,20 +10,20 @@
 
 ---
 
-## Executive Summary
+## Executive Summary (Sequential Execution Order)
 
-| Test Area | Spec File | Tests | Focus Areas |
+| Execution Order | Spec File | Tests | Focus Areas |
 | :--- | :--- | :---: | :--- |
-| **1. Create Account (Signup)** | `signup.spec.ts` | **46** | UI, boundaries, required fields, invalid email formats, duplicate email/username (409), 429 throttling, keyboard submit, padding/margin box model, responsive viewports, content hygiene & unwanted words |
-| **2. Set Password** | `set-password.spec.ts` | **36** | Direct access security, 7-rule live checklist, password length limit counter, mismatch, expired/used token states, styling/padding, responsive metrics, unwanted words |
-| **3. Forgot & Reset Password** | `forgot-password.spec.ts` | **32** | Email format validations, 60s cooldown timer, generic success for privacy, reset token security, 7 rules, mismatch, UI padding/margin, responsive viewports, unwanted words |
-| **4. Login (Fields & Buttons)** | `login-fields-buttons.spec.ts` | **22** | Autofocus, valid/invalid credentials, password masking/unmasking toggles, submit button, Enter key |
-| **5. Login (UI & Layout)** | `login-ui-layout.spec.ts` | **19** | Card title, subtitle, labels, placeholders, branding elements, computed padding/margin box model, submit button styles, content hygiene & unwanted words |
-| **6. Login (Validation & Links)** | `login-validation-links.spec.ts` | **16** | Required field errors, uppercase email rejection (AUTH-001), 5 failed attempts lockout banner, navigation links |
-| **7. Login (Keyboard & A11y)** | `login-keyboard-a11y-responsive.spec.ts` | **15** | Tab navigation sequence, aria attributes, responsive layouts (Mobile/Tablet/Desktop) |
-| **8. Login (E2E Authentication)** | `login.spec.ts` | **2** | Valid credentials redirect to Dashboard; invalid credentials display error alert |
-| **9. YOPmail E2E Full Flow** | `signup-functional-yopmail.spec.ts` | **10** | Live YOPmail inbox browser automation, Turnstile handling, activation, login with new account, post-activation negative |
-| **TOTAL** | **9 Clean Files** | **198** | **Complete Positive & Negative Coverage** |
+| **1. Create Account (Signup)** | `01-signup.spec.ts` | **46** | UI, boundaries, required fields, invalid email formats, duplicate email/username (409), 429 throttling, keyboard submit, padding/margin box model, responsive viewports, content hygiene & unwanted words |
+| **2. Set Password** | `02-set-password.spec.ts` | **36** | Direct access security, 7-rule live checklist, password length limit counter, mismatch, expired/used token states, styling/padding, responsive metrics, unwanted words |
+| **3. Login (Fields & Buttons)** | `03-login-fields-buttons.spec.ts` | **22** | Autofocus, valid/invalid credentials, password masking/unmasking toggles, submit button, Enter key |
+| **4. Login (Validation & Links)** | `04-login-validation-links.spec.ts` | **16** | Required field errors, uppercase email rejection (AUTH-001), 5 failed attempts lockout banner, navigation links |
+| **5. Login (Keyboard & A11y)** | `05-login-keyboard-a11y-responsive.spec.ts` | **15** | Tab navigation sequence, aria attributes, responsive layouts (Mobile/Tablet/Desktop) |
+| **6. Login (UI & Layout)** | `06-login-ui-layout.spec.ts` | **19** | Card title, subtitle, labels, placeholders, branding elements, computed padding/margin box model, submit button styles, content hygiene & unwanted words |
+| **7. Login (E2E Authentication)** | `07-login.spec.ts` | **2** | Valid credentials redirect to Dashboard; invalid credentials display error alert |
+| **8. Forgot & Reset Password** | `08-forgot-password.spec.ts` | **32** | Email format validations, 60s cooldown timer, generic success for privacy, reset token security, 7 rules, mismatch, UI padding/margin, responsive viewports, unwanted words |
+| **9. Full Auth Lifecycle (YOPmail)** | `09-signup-functional-yopmail.spec.ts` | **10** | Complete 7-step lifecycle: Signup $\rightarrow$ Set Password $\rightarrow$ Login $\rightarrow$ Forgot Password $\rightarrow$ Reset Password $\rightarrow$ Old password rejection $\rightarrow$ Login with new reset password |
+| **TOTAL** | **9 Sequenced Files** | **198** | **Full Positive, Negative & Complete Lifecycle Coverage** |
 
 ---
 
