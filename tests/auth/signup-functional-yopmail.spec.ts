@@ -16,7 +16,7 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     verificationUrl: string;
   } | null = null;
 
-  test('TC-SIGNUP-E2E-001: (Core Flow) Signup with Yopmail, set password, and login to dashboard', async ({
+  test('TC-SIGNUP-E2E-001: (Core Flow) Signup with Yopmail, set password, and login to dashboard in single continuous window', async ({
     signupPage,
     setPasswordPage,
     loginPage,
@@ -30,6 +30,15 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
       Object.defineProperty(navigator, 'webdriver', {
         get: () => undefined,
       });
+    });
+
+    // Auto-close any unwanted popups or secondary tabs so everything stays in ONE single tab
+    context.on('page', async (extraPage) => {
+      if (extraPage !== page) {
+        try {
+          await extraPage.close();
+        } catch {}
+      }
     });
 
     const randomUser = authTestData.generators.randomUser({ usernamePrefix: 'usr' });
@@ -46,7 +55,9 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
 
     // Fill valid registration details
     await signupPage.fillUsername(randomUser.username);
+    await page.waitForTimeout(400);
     await signupPage.fillEmail(randomUser.email);
+    await page.waitForTimeout(400);
     await signupPage.clickSubmit();
 
     // Verify "Verification Email Sent" success card
@@ -54,65 +65,76 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await expect(signupPage.successTitle).toContainText(authTestData.signupUiText.successTitle);
     await expect(signupPage.successDescription).toContainText(randomUser.email);
     console.log('✅ [STEP 1 COMPLETE] Verification email sent successfully.');
+    await page.waitForTimeout(1500);
 
     // -------------------------------------------------------------------------
-    // STEP 2: YOPMAIL — RETRIEVE VERIFICATION LINK
+    // STEP 2: YOPMAIL — RETRIEVE VERIFICATION LINK (IN SAME TAB)
     // -------------------------------------------------------------------------
     console.log('\n===============================================================');
-    console.log(`🚀 [STEP 2] Opening Yopmail inbox: ${randomUser.yopmailInbox}`);
+    console.log(`🚀 [STEP 2] Navigating to Yopmail inbox: ${randomUser.yopmailInbox}`);
     console.log('===============================================================');
-    await page.waitForTimeout(2000);
 
-    const mailPage = await context.newPage();
-    const yopmail = new YopmailPage(mailPage);
+    const yopmail = new YopmailPage(page);
     await yopmail.gotoInbox(randomUser.yopmailInbox);
 
     // Retrieve email and verification link (handling Turnstile safely if displayed)
     const verificationUrl = await yopmail.getVerificationLink(12, 4000);
-    await mailPage.close();
 
     expect(verificationUrl).toBeTruthy();
     expect(verificationUrl).toContain('/set-password');
     expect(verificationUrl).toContain('token=');
     console.log(`✅ [STEP 2 COMPLETE] Retrieved verification link: ${verificationUrl}`);
+    await page.waitForTimeout(1500);
 
     // -------------------------------------------------------------------------
-    // STEP 3: SET PASSWORD & ACTIVATE ACCOUNT
+    // STEP 3: SET PASSWORD & ACTIVATE ACCOUNT (IN SAME TAB)
     // -------------------------------------------------------------------------
     console.log('\n===============================================================');
     console.log('🚀 [STEP 3] Opening Set Password page and setting credentials');
     console.log('===============================================================');
 
     await page.goto(verificationUrl);
+    await page.bringToFront();
     await setPasswordPage.newPasswordInput.waitFor({ state: 'visible', timeout: 15000 });
     await expect(setPasswordPage.authCard).toBeVisible();
+    await page.waitForTimeout(1000);
 
-    // Enter compliant 8-character password and confirm
+    // Enter compliant 8-character password and confirm visibly
+    console.log(`✍️ [STEP 3] Entering password: ${randomUser.password}`);
     await setPasswordPage.fillNewPassword(randomUser.password);
+    await page.waitForTimeout(600);
+
+    console.log(`✍️ [STEP 3] Confirming password: ${randomUser.confirmPassword}`);
     await setPasswordPage.fillConfirmPassword(randomUser.confirmPassword);
+    await page.waitForTimeout(600);
+
+    console.log('👉 [STEP 3] Clicking "Activate Account & Set Password"...');
     await setPasswordPage.clickSubmit();
 
     // Verify Account Activated confirmation
     await expect(setPasswordPage.successTitle).toContainText(
       authTestData.setPasswordUiText.successTitle,
+      { timeout: 10000 },
     );
     console.log('✅ [STEP 3 COMPLETE] Account Activated!');
+    await page.waitForTimeout(1200);
 
     // Handle navigation to /login (click "Proceed to Login" button or follow auto-redirect)
     const proceedBtn = page.locator('//button[normalize-space()="Proceed to Login"] | //a[@href="/login"]//button | //a[@href="/login"]');
     try {
       if (await proceedBtn.first().isVisible({ timeout: 4000 })) {
-        console.log('👉 [Step 3] Clicking "Proceed to Login" button...');
+        console.log('👉 [STEP 3] Clicking "Proceed to Login" button...');
         await proceedBtn.first().click();
       }
     } catch {
-      console.log('ℹ️ [Step 3] Auto-redirecting to /login...');
+      console.log('ℹ️ [STEP 3] Auto-redirecting to /login...');
     }
 
     // Confirm navigation to login page
     await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 15000 });
     await expect(loginPage.authCard).toBeVisible();
-    await page.waitForTimeout(1000);
+    console.log('✅ [STEP 3] Arrived on Login page.');
+    await page.waitForTimeout(1500);
 
     // -------------------------------------------------------------------------
     // STEP 4: LOGIN USING CREATED ACCOUNT & VERIFY DASHBOARD
@@ -121,10 +143,15 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     console.log(`🚀 [STEP 4] Logging in as ${randomUser.username}...`);
     console.log('===============================================================');
 
+    console.log(`✍️ [STEP 4] Typing username: ${randomUser.username}`);
     await loginPage.fillUsername(randomUser.username);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(600);
+
+    console.log(`✍️ [STEP 4] Typing password: ${randomUser.password}`);
     await loginPage.fillPassword(randomUser.password);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(600);
+
+    console.log('👉 [STEP 4] Clicking Login button...');
     await loginPage.clickLogin();
 
     // Verify dashboard redirect and access
@@ -132,8 +159,9 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard!');
     console.log('===============================================================\n');
 
-    // Hold on dashboard for 5 seconds so you can clearly see the active dashboard
-    await page.waitForTimeout(5000);
+    // Keep dashboard open and visible on screen for 10 seconds so the user can verify
+    console.log('👀 [DASHBOARD] Keeping Dashboard open for 10 seconds to confirm active login...');
+    await page.waitForTimeout(10000);
 
     // Save activated user for subsequent tests
     activatedUser = {
