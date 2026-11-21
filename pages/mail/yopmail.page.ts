@@ -17,7 +17,7 @@ export class YopmailPage {
 
   /**
    * Navigate to Yopmail homepage, type the email/username into the login field,
-   * and press the arrow/check button to open the inbox — just like a real user.
+   * and press the arrow/check button to open the inbox.
    */
   async gotoInbox(userOrEmail: string): Promise<void> {
     const username = userOrEmail.includes('@')
@@ -59,34 +59,25 @@ export class YopmailPage {
   }
 
   /**
-   * Checks whether the Cloudflare Turnstile "Verify you are human" challenge is currently active on the page.
-   * Checks DOM text, modal containers, and frame URLs.
+   * Checks whether the Cloudflare Turnstile "Verify you are human" modal is currently VISIBLE on screen.
+   * Note: Only checks visibility of the modal dialog so that after the user clicks and the modal closes,
+   * this immediately returns false (even if Cloudflare's background iframe remains in the DOM).
    */
   async isHumanVerificationPresent(): Promise<boolean> {
     try {
-      // 1. Check if any frame belongs to Cloudflare Turnstile
-      const hasCloudflareFrame = this.page.frames().some((f) => {
-        const u = f.url();
-        return u.includes('cloudflare') || u.includes('turnstile') || u.includes('challenges');
-      });
-      if (hasCloudflareFrame) {
+      const modalText = this.page.locator('text="Please confirm you\'re human to continue"');
+      if (await modalText.isVisible({ timeout: 400 }).catch(() => false)) {
         return true;
       }
 
-      // 2. Check modal text and selectors on the main page
-      const challengeLocators = [
-        this.page.locator('text="Please confirm you\'re human to continue"'),
-        this.page.locator('text="Verify you are human"'),
-        this.page.locator('iframe[src*="cloudflare"]'),
-        this.page.locator('iframe[src*="turnstile"]'),
-        this.page.locator('iframe[title*="Cloudflare"]'),
-        this.page.locator('div:has-text("Verify you are human")'),
-      ];
+      const verifyText = this.page.locator('text="Verify you are human"');
+      if (await verifyText.isVisible({ timeout: 400 }).catch(() => false)) {
+        return true;
+      }
 
-      for (const loc of challengeLocators) {
-        if (await loc.first().isVisible({ timeout: 500 }).catch(() => false)) {
-          return true;
-        }
+      const modalContainer = this.page.locator('div:has-text("Please confirm you\'re human to continue")');
+      if (await modalContainer.first().isVisible({ timeout: 400 }).catch(() => false)) {
+        return true;
       }
 
       return false;
@@ -98,13 +89,13 @@ export class YopmailPage {
   /**
    * Detects if a "Verify you are human" / Cloudflare challenge is present.
    * If detected, pauses and gives the user time to manually click the checkbox in headed mode.
-   * DOES NOT reload the page while waiting so user clicks are not interrupted!
+   * The moment the user clicks and the modal closes, it returns IMMEDIATELY and resumes Playwright!
    */
   async waitForHumanVerification(maxWaitMs: number = 90000): Promise<void> {
-    // Wait briefly in case the modal is still rendering
+    // Check if challenge modal is visible
     let isPresent = await this.isHumanVerificationPresent();
     if (!isPresent) {
-      await this.page.waitForTimeout(1500);
+      await this.page.waitForTimeout(1000);
       isPresent = await this.isHumanVerificationPresent();
     }
 
@@ -113,20 +104,19 @@ export class YopmailPage {
     }
 
     console.log('\n========================================================================');
-    console.log('⚠️  [Yopmail] Human verification challenge detected ("Verify you are human")!');
-    console.log('👉 Please click the "Verify you are human" checkbox manually in the browser.');
-    console.log('⏳ Waiting for manual verification (page will NOT reload while you click)...');
+    console.log('⚠️  [Yopmail] Human verification challenge detected on screen!');
+    console.log('👉 Please tick the "Verify you are human" checkbox in the browser window.');
+    console.log('⏳ Playwright is waiting for your click (will auto-continue right after)...');
     console.log('========================================================================\n');
 
     const startTime = Date.now();
     while (Date.now() - startTime < maxWaitMs) {
-      // Wait peacefully without touching or reloading the page
-      await this.page.waitForTimeout(1000);
+      await this.page.waitForTimeout(600);
 
-      const stillPresent = await this.isHumanVerificationPresent();
-      if (!stillPresent) {
-        console.log('✅ [Yopmail] Human verification completed! Resuming automated flow...\n');
-        await this.page.waitForTimeout(2000);
+      const stillVisible = await this.isHumanVerificationPresent();
+      if (!stillVisible) {
+        console.log('✅ [Yopmail] Human verification completed! Playwright is now continuing all remaining actions automatically...\n');
+        await this.page.waitForTimeout(1500);
         return;
       }
     }
@@ -142,7 +132,7 @@ export class YopmailPage {
       const consentBtn = this.page.locator(
         '#accept, #cconsent-ok, button:has-text("Consent"), .fc-cta-consent, button:has-text("AGREE"), button:has-text("Accept all")',
       );
-      if (await consentBtn.first().isVisible({ timeout: 2000 })) {
+      if (await consentBtn.first().isVisible({ timeout: 1500 })) {
         await consentBtn.first().click();
         await this.page.waitForTimeout(500);
       }
@@ -156,24 +146,23 @@ export class YopmailPage {
    * Will NOT refresh if a human verification challenge is currently showing!
    */
   async refresh(): Promise<void> {
-    // Safety check: Never reload if the CAPTCHA modal is present
     if (await this.isHumanVerificationPresent()) {
       await this.waitForHumanVerification();
       return;
     }
 
     try {
-      const refreshBtn = this.page.locator('#refresh, #crefresh, #refreshbut');
-      if (await refreshBtn.first().isVisible({ timeout: 3000 })) {
+      const refreshBtn = this.page.locator('#refresh, #crefresh, #refreshbut, button.wrefresh, button#refresh');
+      if (await refreshBtn.first().isVisible({ timeout: 2000 })) {
         await refreshBtn.first().click();
-        await this.page.waitForTimeout(2000);
+        await this.page.waitForTimeout(1500);
       } else {
         await this.page.reload({ waitUntil: 'domcontentloaded' });
-        await this.page.waitForTimeout(2000);
+        await this.page.waitForTimeout(1500);
       }
     } catch {
       await this.page.reload({ waitUntil: 'domcontentloaded' });
-      await this.page.waitForTimeout(2000);
+      await this.page.waitForTimeout(1500);
     }
     await this.dismissConsent();
   }
@@ -183,33 +172,39 @@ export class YopmailPage {
    * from the latest email that contains a "/set-password" link.
    *
    * Flow:
-   *  1. Check for human verification challenge
-   *  2. Look for mail rows inside #ifinbox iframe
-   *  3. Click the first (most recent) mail row
-   *  4. Inside #ifmail iframe, find <a> linking to /set-password
-   *  5. Return the href
+   *  1. Look for mail rows inside #ifinbox iframe
+   *  2. Click the first (most recent) mail row
+   *  3. Inside #ifmail iframe, find <a> linking to /set-password
+   *  4. Return the href
    */
   async getVerificationLink(
-    maxRetries: number = 8,
-    retryDelayMs: number = 5000,
+    maxRetries: number = 10,
+    retryDelayMs: number = 4000,
   ): Promise<string> {
+    console.log('📬 [Yopmail] Searching for verification email in inbox...');
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await this.dismissConsent();
-        await this.waitForHumanVerification();
 
-        // Look for email rows inside the inbox iframe
-        const mailRows = this.inboxFrame.locator('.m, .lm, button.lm');
+        // If human verification popped up, wait for user click
+        if (await this.isHumanVerificationPresent()) {
+          await this.waitForHumanVerification();
+        }
+
+        // Look for email rows inside the inbox iframe (#ifinbox)
+        const mailRows = this.inboxFrame.locator('.m, .lm, button.lm, a.lm, div.m');
         const count = await mailRows.count();
 
         if (count > 0) {
+          console.log(`✉️ [Yopmail] Email arrived in inbox (${count} item(s))! Opening latest email...`);
           // Click the top (most recent) message
           await mailRows.first().click();
 
-          // Allow mail body iframe to load
+          // Allow mail body iframe to render
           await this.page.waitForTimeout(2000);
 
-          // Look for the verification link inside the mail body iframe
+          // Look for the verification link inside the mail body iframe (#ifmail)
           const verificationLink = this.mailFrame.locator(
             'a[href*="/set-password"], a:has-text("Verify Email & Set Password"), a:has-text("Verify Email"), a:has-text("Set Password")',
           );
@@ -218,11 +213,14 @@ export class YopmailPage {
           const href = await verificationLink.first().getAttribute('href');
 
           if (href && href.includes('/set-password')) {
+            console.log(`🔗 [Yopmail] Verification link found: ${href}`);
             return href;
           }
+        } else {
+          console.log(`⏳ [Yopmail] Inbox not updated yet (Attempt ${attempt}/${maxRetries}). Refreshing...`);
         }
       } catch {
-        // Message might not have arrived yet, proceed to retry
+        // Retry if message hasn't appeared yet
       }
 
       if (attempt < maxRetries) {

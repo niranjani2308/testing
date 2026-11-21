@@ -29,6 +29,7 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     // -----------------------------------------------------------------------
     // STEP 1: Navigate to Signup page and register a new account
     // -----------------------------------------------------------------------
+    console.log(`\n🚀 [Step 1] Registering user: ${randomUser.username} (${randomUser.email})`);
     await signupPage.goto();
     await expect(signupPage.authCard).toBeVisible();
 
@@ -40,16 +41,15 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     await expect(signupPage.successCard).toBeVisible({ timeout: 15000 });
     await expect(signupPage.successTitle).toHaveText(authTestData.signupUiText.successTitle);
     await expect(signupPage.linkValidityNote).toBeVisible();
+    console.log('✅ [Step 1] Signup form submitted. "Verification Email Sent" success card displayed.');
 
     // -----------------------------------------------------------------------
     // STEP 2: Open Yopmail in a new tab and find the verification email
     //         (Full browser-based flow — no API interception)
     // -----------------------------------------------------------------------
+    console.log('\n🚀 [Step 2] Opening Yopmail inbox in browser to retrieve verification email...');
+    await page.waitForTimeout(2000);
 
-    // Wait a moment for the email to be delivered
-    await page.waitForTimeout(3000);
-
-    // Open a new browser tab for Yopmail
     const mailPage = await context.newPage();
     const yopmail = new YopmailPage(mailPage);
 
@@ -57,20 +57,23 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     await yopmail.gotoInbox(randomUser.yopmailInbox);
 
     // Poll the inbox and extract the verification link from the email body
-    const verificationUrl = await yopmail.getVerificationLink(8, 5000);
+    const verificationUrl = await yopmail.getVerificationLink(10, 4000);
 
-    // Close the Yopmail tab
+    // Close the Yopmail tab automatically
     await mailPage.close();
+    console.log('✅ [Step 2] Yopmail verification link retrieved successfully and mail tab closed.');
 
     // -----------------------------------------------------------------------
     // STEP 3: Navigate to the Set Password verification URL
     // -----------------------------------------------------------------------
+    console.log(`\n🚀 [Step 3] Navigating to Set Password page: ${verificationUrl}`);
     expect(verificationUrl).toContain('/set-password');
     await page.goto(verificationUrl);
 
     // -----------------------------------------------------------------------
     // STEP 4: Set Password and Activate Account
     // -----------------------------------------------------------------------
+    console.log('🚀 [Step 4] Filling compliant password and confirming activation...');
     await setPasswordPage.newPasswordInput.waitFor({ state: 'visible', timeout: 10000 });
 
     await setPasswordPage.fillNewPassword(randomUser.password);
@@ -81,6 +84,7 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     await expect(setPasswordPage.successTitle).toHaveText(
       authTestData.setPasswordUiText.successTitle,
     );
+    console.log('✅ [Step 4] Account Activated! Waiting for redirect to /login...');
 
     // Verify auto-redirect to /login
     await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 10000 });
@@ -89,12 +93,14 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     // -----------------------------------------------------------------------
     // STEP 5: Log in with the newly created random user & password
     // -----------------------------------------------------------------------
+    console.log(`\n🚀 [Step 5] Logging into application as ${randomUser.username}...`);
     await loginPage.fillUsername(randomUser.username);
     await loginPage.fillPassword(randomUser.password);
     await loginPage.clickLogin();
 
     // Expect successful authentication and redirection to Dashboard
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+    console.log('🎉 [Step 5] Successfully logged into dashboard with new credentials! Flow complete!\n');
   });
 
   test('TC-SIGNUP-E2E-002: Re-registering existing pending email updates verification token and sends new link', async ({
