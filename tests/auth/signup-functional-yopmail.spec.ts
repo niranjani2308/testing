@@ -6,26 +6,29 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
   // Execute sequentially to respect email service and rate limits
   test.describe.configure({ mode: 'serial' });
 
-  test('TC-SIGNUP-E2E-001: Complete flow - Register random user, activate via Yopmail token & login to dashboard', async ({
+  test('TC-SIGNUP-E2E-001: Complete flow - Register random user, verify email via Yopmail browser & login to dashboard', async ({
     signupPage,
     setPasswordPage,
     loginPage,
     context,
     page,
   }) => {
+    // Increase timeout for this E2E flow (email delivery + manual CAPTCHA verification + Yopmail polling)
+    test.setTimeout(240_000);
+
+    // Remove automated browser markers so Cloudflare Turnstile allows manual user clicks
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => undefined,
+      });
+    });
+
     // Generate a fresh random test user with compliant 8-character password and Yopmail inbox
     const randomUser = authTestData.generators.randomUser({ usernamePrefix: 'usr' });
 
     // -----------------------------------------------------------------------
-    // STEP 1: Listen for registration API response & submit Signup form
+    // STEP 1: Navigate to Signup page and register a new account
     // -----------------------------------------------------------------------
-    const registerResponsePromise = page.waitForResponse(
-      (resp) =>
-        resp.url().includes('/auth/register') &&
-        (resp.status() === 200 || resp.status() === 201),
-      { timeout: 15000 },
-    );
-
     await signupPage.goto();
     await expect(signupPage.authCard).toBeVisible();
 
@@ -34,86 +37,64 @@ test.describe('Create Account - Functional End-to-End Registration & Yopmail Ver
     await signupPage.clickSubmit();
 
     // Verify "Verification Email Sent" success card appears
-    await expect(signupPage.successCard).toBeVisible({ timeout: 10000 });
+    await expect(signupPage.successCard).toBeVisible({ timeout: 15000 });
     await expect(signupPage.successTitle).toHaveText(authTestData.signupUiText.successTitle);
     await expect(signupPage.linkValidityNote).toBeVisible();
 
     // -----------------------------------------------------------------------
-    // STEP 2: Retrieve verification link from Backend Dispatch & Yopmail Inbox
+    // STEP 2: Open Yopmail in a new tab and find the verification email
+    //         (Full browser-based flow — no API interception)
     // -----------------------------------------------------------------------
-    let verificationUrl = '';
 
-    // A. Extract link from the server registration dispatch
-    try {
-      const registerResponse = await registerResponsePromise;
-      const body = (await registerResponse.json()) as { link?: string };
-      if (body && body.link) {
-        verificationUrl = body.link;
-      }
-    } catch {
-      // If network response was not captured, proceed to inbox check
-    }
+    // Wait a moment for the email to be delivered
+    await page.waitForTimeout(3000);
 
-    // B. Check Yopmail inbox in a secondary tab if needed
-    try {
-      const mailPage = await context.newPage();
-      const yopmail = new YopmailPage(mailPage);
-      await yopmail.gotoInbox(randomUser.yopmailInbox);
-      const linkFromMail = await yopmail.getVerificationLink(3, 2000).catch(() => '');
-      if (linkFromMail) {
-        verificationUrl = linkFromMail;
-      }
-      await mailPage.close();
-    } catch {
-      // Graceful fallback to intercepted verificationUrl
-    }
+    // Open a new browser tab for Yopmail
+    const mailPage = await context.newPage();
+    const yopmail = new YopmailPage(mailPage);
+
+    // Navigate to yopmail.com, type the email, click to open inbox
+    await yopmail.gotoInbox(randomUser.yopmailInbox);
+
+    // Poll the inbox and extract the verification link from the email body
+    const verificationUrl = await yopmail.getVerificationLink(8, 5000);
+
+    // Close the Yopmail tab
+    await mailPage.close();
 
     // -----------------------------------------------------------------------
-    // STEP 3: Navigate to Set Password verification URL
+    // STEP 3: Navigate to the Set Password verification URL
     // -----------------------------------------------------------------------
-    if (verificationUrl && verificationUrl.includes('/set-password')) {
-      await page.goto(verificationUrl);
-    } else {
-      await setPasswordPage.goto('mock_verified_flow_token');
-    }
+    expect(verificationUrl).toContain('/set-password');
+    await page.goto(verificationUrl);
 
     // -----------------------------------------------------------------------
     // STEP 4: Set Password and Activate Account
     // -----------------------------------------------------------------------
-    const isFormVisible = await setPasswordPage.newPasswordInput
-      .waitFor({ state: 'visible', timeout: 8000 })
-      .then(() => true)
-      .catch(() => false);
+    await setPasswordPage.newPasswordInput.waitFor({ state: 'visible', timeout: 10000 });
 
-    if (isFormVisible) {
-      await setPasswordPage.fillNewPassword(randomUser.password);
-      await setPasswordPage.fillConfirmPassword(randomUser.confirmPassword);
-      await setPasswordPage.clickSubmit();
+    await setPasswordPage.fillNewPassword(randomUser.password);
+    await setPasswordPage.fillConfirmPassword(randomUser.confirmPassword);
+    await setPasswordPage.clickSubmit();
 
-      // Check success state
-      await expect(setPasswordPage.successTitle).toHaveText(
-        authTestData.setPasswordUiText.successTitle,
-      );
+    // Check "Account Activated!" success state
+    await expect(setPasswordPage.successTitle).toHaveText(
+      authTestData.setPasswordUiText.successTitle,
+    );
 
-      // Verify redirection to /login
-      await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 10000 });
-      await expect(loginPage.authCard).toBeVisible();
+    // Verify auto-redirect to /login
+    await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 10000 });
+    await expect(loginPage.authCard).toBeVisible();
 
-      // -----------------------------------------------------------------------
-      // STEP 5: Log in with the newly created random user & password!
-      // -----------------------------------------------------------------------
-      await loginPage.fillUsername(randomUser.username);
-      await loginPage.fillPassword(randomUser.password);
-      await loginPage.clickLogin();
+    // -----------------------------------------------------------------------
+    // STEP 5: Log in with the newly created random user & password
+    // -----------------------------------------------------------------------
+    await loginPage.fillUsername(randomUser.username);
+    await loginPage.fillPassword(randomUser.password);
+    await loginPage.clickLogin();
 
-      // Expect successful authentication and redirection to Dashboard
-      await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-    } else {
-      // If direct or simulated token is rejected, verify access security state
-      await expect(
-        setPasswordPage.blockedCardTitle.or(setPasswordPage.expiredCardTitle),
-      ).toBeVisible();
-    }
+    // Expect successful authentication and redirection to Dashboard
+    await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
   });
 
   test('TC-SIGNUP-E2E-002: Re-registering existing pending email updates verification token and sends new link', async ({
