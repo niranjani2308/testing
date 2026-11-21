@@ -207,8 +207,8 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await expect(resetPasswordPage.authCard).toBeVisible();
     await page.waitForTimeout(1000);
 
-    const newPassword = 'NewPass1!';
-    console.log(`✍️ [STEP 6] Entering new password: ${newPassword}`);
+    const newPassword = 'Reset12!';
+    console.log(`✍️ [STEP 6] Entering compliant 8-char new password: ${newPassword}`);
     await resetPasswordPage.fillNewPassword(newPassword);
     await page.waitForTimeout(600);
 
