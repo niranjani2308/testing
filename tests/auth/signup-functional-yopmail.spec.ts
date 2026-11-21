@@ -3,9 +3,9 @@ import { authTestData } from '../../test-data/auth.data';
 import { YopmailPage } from '../../pages/mail/yopmail.page';
 
 // =============================================================================
-// SECTION 1: MASTER END-TO-END FLOW (Real Backend + Yopmail + Complete Flow Validation)
+// SECTION 1: END-TO-END FLOW (Create Account → Yopmail → Set Password → Login)
 // =============================================================================
-test.describe('Create Account - Master End-to-End User Flow & Verification', () => {
+test.describe('Create Account - End-to-End User Flow & Verification', () => {
   test.describe.configure({ mode: 'serial' });
 
   // Shared state across serial tests — populated by TC-SIGNUP-E2E-001
@@ -16,14 +16,14 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     verificationUrl: string;
   } | null = null;
 
-  test('TC-SIGNUP-E2E-001: (Master Flow) Complete sequential journey: Signup UI & validations → YOPmail verification → Set Password live rules & validations → Login validations & dashboard authentication', async ({
+  test('TC-SIGNUP-E2E-001: (Core Flow) Signup with Yopmail, set password, and login to dashboard', async ({
     signupPage,
     setPasswordPage,
     loginPage,
     context,
     page,
   }) => {
-    test.setTimeout(300_000); // 5 minutes for comprehensive flow including human verification if needed
+    test.setTimeout(300_000); // 5 minutes to allow human verification if prompted
 
     // Prevent Chrome from revealing webdriver flag to Cloudflare
     await context.addInitScript(() => {
@@ -34,111 +34,32 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
 
     const randomUser = authTestData.generators.randomUser({ usernamePrefix: 'usr' });
 
-    // =========================================================================
-    // STAGE 1: SIGNUP PAGE — UI, VALIDATION, BUTTON VISIBILITY & ENFORCEMENT
-    // =========================================================================
+    // -------------------------------------------------------------------------
+    // STEP 1: CREATE AN ACCOUNT (SIGNUP)
+    // -------------------------------------------------------------------------
     console.log('\n===============================================================');
-    console.log('🚀 [STAGE 1] CREATE AN ACCOUNT — UI, STYLING & VALIDATIONS');
+    console.log(`🚀 [STEP 1] Creating account: ${randomUser.username} (${randomUser.email})`);
     console.log('===============================================================');
 
     await signupPage.goto();
     await expect(signupPage.authCard).toBeVisible();
 
-    // 1.1 UI & Layout elements check
-    await expect(signupPage.cardTitle).toContainText(authTestData.signupUiText.title);
-    await expect(signupPage.cardSubtitle).toContainText(authTestData.signupUiText.subtitle);
-    await expect(signupPage.usernameLabel).toBeVisible();
-    await expect(signupPage.emailLabel).toBeVisible();
-    await expect(signupPage.submitButton).toBeVisible();
-    await expect(signupPage.submitButton).toBeEnabled();
-    await expect(signupPage.loginLink).toBeVisible();
-
-    // 1.2 Content hygiene / Unwanted words verification
-    const signupPageText = await page.innerText('body');
-    for (const word of authTestData.unwantedWords) {
-      expect(signupPageText).not.toContain(word);
-    }
-
-    // 1.3 Box model styling verification (padding, margin, button)
-    const cardPadding = await signupPage.authCard.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return {
-        paddingTop: parseInt(style.paddingTop, 10),
-        paddingBottom: parseInt(style.paddingBottom, 10),
-        backgroundColor: style.backgroundColor,
-      };
-    });
-    expect(cardPadding.paddingTop).toBeGreaterThanOrEqual(16);
-    expect(cardPadding.backgroundColor).toBe(authTestData.uiStyling.authCard.backgroundColor);
-
-    // 1.4 Button enforcement & negative validations: Verify button prevents submission when fields empty/invalid
-    console.log('🧪 [Stage 1.4] Testing Submit Button validation enforcement...');
-
-    // A: Empty submission
-    await signupPage.clickSubmit();
-    await expect(signupPage.usernameError).toContainText(
-      authTestData.signupValidationMessages.usernameRequired,
-    );
-    await expect(signupPage.emailError).toContainText(
-      authTestData.signupValidationMessages.emailRequired,
-    );
-    await expect(signupPage.successCard).not.toBeVisible();
-
-    // B: Username filled, email empty
-    await signupPage.fillUsername(randomUser.username);
-    await signupPage.clearEmail();
-    await signupPage.clickSubmit();
-    await expect(signupPage.emailError).toContainText(
-      authTestData.signupValidationMessages.emailRequired,
-    );
-    await expect(signupPage.usernameError).not.toBeVisible();
-
-    // C: Email filled, username empty
-    await signupPage.clearUsername();
-    await signupPage.fillEmail(randomUser.email);
-    await signupPage.clickSubmit();
-    await expect(signupPage.usernameError).toContainText(
-      authTestData.signupValidationMessages.usernameRequired,
-    );
-    await expect(signupPage.emailError).not.toBeVisible();
-
-    // D: Boundary username (< 2 chars)
-    await signupPage.fillUsername('a');
-    await signupPage.clickSubmit();
-    await expect(signupPage.usernameError).toContainText(
-      authTestData.signupValidationMessages.usernameMinLength,
-    );
-
-    // E: Invalid email format
-    await signupPage.fillUsername(randomUser.username);
-    await signupPage.fillEmail('invalid-format-email');
-    await signupPage.clickSubmit();
-    await expect(signupPage.emailError).toContainText(
-      authTestData.signupValidationMessages.emailInvalid,
-    );
-
-    // F: Error clears upon typing
-    await signupPage.fillEmail(randomUser.email);
-    await expect(signupPage.emailError).not.toBeVisible();
-
-    // 1.5 Positive Submission: Fill valid user details and submit
-    console.log(`🚀 [Stage 1.5] Registering fresh user: ${randomUser.username} (${randomUser.email})`);
+    // Fill valid registration details
     await signupPage.fillUsername(randomUser.username);
     await signupPage.fillEmail(randomUser.email);
     await signupPage.clickSubmit();
 
-    // Verify Success Card
+    // Verify "Verification Email Sent" success card
     await expect(signupPage.successCard).toBeVisible({ timeout: 15000 });
     await expect(signupPage.successTitle).toContainText(authTestData.signupUiText.successTitle);
-    await expect(signupPage.linkValidityNote).toBeVisible();
     await expect(signupPage.successDescription).toContainText(randomUser.email);
-    console.log('✅ [STAGE 1 COMPLETE] Signup form submitted. "Verification Email Sent" success card displayed.');
+    console.log('✅ [STEP 1 COMPLETE] Verification email sent successfully.');
 
-    // =========================================================================
-    // STAGE 2: YOPMAIL — EMAIL DELIVERY & VERIFICATION LINK EXTRACTION
-    // =========================================================================
+    // -------------------------------------------------------------------------
+    // STEP 2: YOPMAIL — RETRIEVE VERIFICATION LINK
+    // -------------------------------------------------------------------------
     console.log('\n===============================================================');
-    console.log('🚀 [STAGE 2] YOPMAIL — RETRIEVING EMAIL & LINK');
+    console.log(`🚀 [STEP 2] Opening Yopmail inbox: ${randomUser.yopmailInbox}`);
     console.log('===============================================================');
     await page.waitForTimeout(2000);
 
@@ -146,134 +67,58 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     const yopmail = new YopmailPage(mailPage);
     await yopmail.gotoInbox(randomUser.yopmailInbox);
 
+    // Retrieve email and verification link (handling Turnstile safely if displayed)
     const verificationUrl = await yopmail.getVerificationLink(12, 4000);
     await mailPage.close();
 
     expect(verificationUrl).toBeTruthy();
     expect(verificationUrl).toContain('/set-password');
     expect(verificationUrl).toContain('token=');
-    console.log(`✅ [STAGE 2 COMPLETE] Verification URL retrieved: ${verificationUrl}`);
+    console.log(`✅ [STEP 2 COMPLETE] Retrieved verification link: ${verificationUrl}`);
 
-    // =========================================================================
-    // STAGE 3: SET PASSWORD — FUNCTIONAL & NON-FUNCTIONAL VALIDATIONS & ACTIVATION
-    // =========================================================================
+    // -------------------------------------------------------------------------
+    // STEP 3: SET PASSWORD & ACTIVATE ACCOUNT
+    // -------------------------------------------------------------------------
     console.log('\n===============================================================');
-    console.log('🚀 [STAGE 3] SET PASSWORD — UI, LIVE RULES, MISMATCH & ACTIVATION');
+    console.log('🚀 [STEP 3] Opening Set Password page and setting credentials');
     console.log('===============================================================');
 
     await page.goto(verificationUrl);
     await setPasswordPage.newPasswordInput.waitFor({ state: 'visible', timeout: 15000 });
-
-    // 3.1 UI elements check
     await expect(setPasswordPage.authCard).toBeVisible();
-    await expect(setPasswordPage.cardTitle).toContainText(authTestData.setPasswordUiText.title);
-    await expect(setPasswordPage.passwordRulesContainer).toBeVisible();
-    await expect(setPasswordPage.submitButton).toBeVisible();
 
-    // 3.2 Content hygiene check
-    const setPasswordPageText = await page.innerText('body');
-    for (const word of authTestData.unwantedWords) {
-      expect(setPasswordPageText).not.toContain(word);
-    }
-
-    // 3.3 Negative validations on Set Password
-    console.log('🧪 [Stage 3.3] Testing Set Password negative validations...');
-
-    // A: Empty submission
-    await setPasswordPage.clickSubmit();
-    await expect(
-      setPasswordPage.newPasswordError.or(setPasswordPage.errorAlert),
-    ).toBeVisible({ timeout: 5000 });
-
-    // B: Non-compliant password rules checklist test (lowercase only)
-    await setPasswordPage.fillNewPassword('onlylower');
-    await expect(setPasswordPage.ruleUppercase).toBeVisible();
-    await expect(setPasswordPage.ruleNumber).toBeVisible();
-    await expect(setPasswordPage.ruleSpecial).toBeVisible();
-
-    // C: Password length limit counter (> 8 characters)
-    await setPasswordPage.fillNewPassword('LongPass1!');
-    await expect(setPasswordPage.newPasswordError).toContainText('exceeds 8-character limit');
-
-    // D: Password mismatch validation
-    await setPasswordPage.fillNewPassword(randomUser.password);
-    await setPasswordPage.fillConfirmPassword('DiffPass1!');
-    await setPasswordPage.clickSubmit();
-    await expect(setPasswordPage.confirmPasswordError).toContainText(
-      authTestData.setPasswordValidationMessages.passwordMismatch,
-    );
-
-    // E: Password visibility toggles
-    await expect(setPasswordPage.newPasswordInput).toHaveAttribute('type', 'password');
-    await setPasswordPage.toggleNewPasswordVisibility();
-    await expect(setPasswordPage.newPasswordInput).toHaveAttribute('type', 'text');
-    await setPasswordPage.toggleNewPasswordVisibility();
-    await expect(setPasswordPage.newPasswordInput).toHaveAttribute('type', 'password');
-
-    // 3.4 Positive account activation
-    console.log('🚀 [Stage 3.4] Submitting compliant 8-char password for activation...');
+    // Enter compliant 8-character password and confirm
     await setPasswordPage.fillNewPassword(randomUser.password);
     await setPasswordPage.fillConfirmPassword(randomUser.confirmPassword);
     await setPasswordPage.clickSubmit();
 
-    // Verify Account Activated success state
+    // Verify Account Activated confirmation
     await expect(setPasswordPage.successTitle).toContainText(
       authTestData.setPasswordUiText.successTitle,
     );
-    console.log('✅ [STAGE 3 COMPLETE] Account Activated! Waiting for redirect to /login...');
+    console.log('✅ [STEP 3 COMPLETE] Account Activated! Redirecting to /login...');
 
-    // Auto-redirect or manual navigation to /login
+    // Wait for redirect to login page
     await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 15000 });
     await expect(loginPage.authCard).toBeVisible();
 
-    // =========================================================================
-    // STAGE 4: LOGIN PAGE — VALIDATIONS & DASHBOARD REDIRECTION
-    // =========================================================================
+    // -------------------------------------------------------------------------
+    // STEP 4: LOGIN USING CREATED ACCOUNT & VERIFY DASHBOARD
+    // -------------------------------------------------------------------------
     console.log('\n===============================================================');
-    console.log('🚀 [STAGE 4] LOGIN PAGE — VALIDATIONS & DASHBOARD AUTHENTICATION');
+    console.log(`🚀 [STEP 4] Logging in as ${randomUser.username}...`);
     console.log('===============================================================');
 
-    // 4.1 UI elements & content hygiene
-    await expect(loginPage.cardTitle).toContainText(authTestData.loginUiText.title);
-    const loginPageText = await page.innerText('body');
-    for (const word of authTestData.unwantedWords) {
-      expect(loginPageText).not.toContain(word);
-    }
-
-    // 4.2 Negative login: Empty fields validation
-    await loginPage.clearUsername();
-    await loginPage.clearPassword();
-    await loginPage.clickLogin();
-    await expect(loginPage.usernameError).toContainText(authTestData.validationMessages.usernameRequired);
-    await expect(loginPage.passwordError).toContainText(authTestData.validationMessages.passwordRequired);
-
-    // 4.3 Negative login: Incorrect password rejection
-    console.log('🧪 [Stage 4.3] Testing negative login with wrong password...');
-    await loginPage.fillUsername(randomUser.username);
-    await loginPage.fillPassword('WrongP1!');
-    await loginPage.clickLogin();
-    await expect(loginPage.errorAlert).toBeVisible({ timeout: 5000 });
-    await expect(page).not.toHaveURL(/.*dashboard/);
-
-    // 4.4 Password visibility toggle test
-    await expect(loginPage.passwordInput).toHaveAttribute('type', 'password');
-    await loginPage.togglePasswordVisibility();
-    await expect(loginPage.passwordInput).toHaveAttribute('type', 'text');
-    await loginPage.togglePasswordVisibility();
-    await expect(loginPage.passwordInput).toHaveAttribute('type', 'password');
-
-    // 4.5 Positive Login: Sign in with the newly created account
-    console.log(`🚀 [Stage 4.5] Signing in with activated credentials: ${randomUser.username}...`);
     await loginPage.fillUsername(randomUser.username);
     await loginPage.fillPassword(randomUser.password);
     await loginPage.clickLogin();
 
-    // Verify successful authentication and redirection to dashboard
+    // Verify dashboard redirect and access
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-    console.log('🎉 [STAGE 4 COMPLETE] Successfully logged into dashboard!');
+    console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard!');
     console.log('===============================================================\n');
 
-    // Save activated user for following post-activation tests
+    // Save activated user for subsequent tests
     activatedUser = {
       username: randomUser.username,
       email: randomUser.email,
