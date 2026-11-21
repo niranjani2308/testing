@@ -96,11 +96,23 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await expect(setPasswordPage.successTitle).toContainText(
       authTestData.setPasswordUiText.successTitle,
     );
-    console.log('✅ [STEP 3 COMPLETE] Account Activated! Redirecting to /login...');
+    console.log('✅ [STEP 3 COMPLETE] Account Activated!');
 
-    // Wait for redirect to login page
+    // Handle navigation to /login (click "Proceed to Login" button or follow auto-redirect)
+    const proceedBtn = page.locator('//button[normalize-space()="Proceed to Login"] | //a[@href="/login"]//button | //a[@href="/login"]');
+    try {
+      if (await proceedBtn.first().isVisible({ timeout: 4000 })) {
+        console.log('👉 [Step 3] Clicking "Proceed to Login" button...');
+        await proceedBtn.first().click();
+      }
+    } catch {
+      console.log('ℹ️ [Step 3] Auto-redirecting to /login...');
+    }
+
+    // Confirm navigation to login page
     await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 15000 });
     await expect(loginPage.authCard).toBeVisible();
+    await page.waitForTimeout(1000);
 
     // -------------------------------------------------------------------------
     // STEP 4: LOGIN USING CREATED ACCOUNT & VERIFY DASHBOARD
@@ -110,13 +122,18 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     console.log('===============================================================');
 
     await loginPage.fillUsername(randomUser.username);
+    await page.waitForTimeout(500);
     await loginPage.fillPassword(randomUser.password);
+    await page.waitForTimeout(500);
     await loginPage.clickLogin();
 
     // Verify dashboard redirect and access
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
     console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard!');
     console.log('===============================================================\n');
+
+    // Hold on dashboard for 5 seconds so you can clearly see the active dashboard
+    await page.waitForTimeout(5000);
 
     // Save activated user for subsequent tests
     activatedUser = {
