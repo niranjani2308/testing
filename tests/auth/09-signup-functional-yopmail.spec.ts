@@ -16,14 +16,16 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     verificationUrl: string;
   } | null = null;
 
-  test('TC-SIGNUP-E2E-001: (Core Flow) Signup with Yopmail, set password, and login to dashboard in single continuous window', async ({
+  test('TC-SIGNUP-E2E-001: (Full Auth Lifecycle) Signup -> Set Password -> Login -> Forgot Password -> Set New Password -> Login with Reset Password', async ({
     signupPage,
     setPasswordPage,
     loginPage,
+    forgotPasswordPage,
+    resetPasswordPage,
     context,
     page,
   }) => {
-    test.setTimeout(300_000); // 5 minutes to allow human verification if prompted
+    test.setTimeout(450_000); // 7.5 minutes for complete 6-stage lifecycle including Yopmail retrieval
 
     // Prevent Chrome from revealing webdriver flag to Cloudflare
     await context.addInitScript(() => {
@@ -156,19 +158,127 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
 
     // Verify dashboard redirect and access
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-    console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard!');
+    console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard with initial password!');
+    console.log('===============================================================\n');
+    await page.waitForTimeout(3000);
+
+    // -------------------------------------------------------------------------
+    // STEP 5: FORGOT PASSWORD REQUEST
+    // -------------------------------------------------------------------------
+    console.log('\n===============================================================');
+    console.log(`🚀 [STEP 5] Navigating to Forgot Password for: ${randomUser.email}`);
+    console.log('===============================================================');
+
+    await forgotPasswordPage.goto();
+    await expect(forgotPasswordPage.authCard).toBeVisible();
+    await page.waitForTimeout(800);
+
+    console.log(`✍️ [STEP 5] Requesting password reset link for: ${randomUser.email}`);
+    await forgotPasswordPage.fillEmail(randomUser.email);
+    await page.waitForTimeout(500);
+    await forgotPasswordPage.clickSubmit();
+
+    // Verify recovery dispatched confirmation
+    await expect(forgotPasswordPage.successCard).toBeVisible({ timeout: 15000 });
+    await expect(forgotPasswordPage.successTitle).toContainText(
+      authTestData.forgotPasswordUiText.successTitle,
+    );
+    console.log('✅ [STEP 5 COMPLETE] Password reset link dispatched successfully.');
+    await page.waitForTimeout(1500);
+
+    // -------------------------------------------------------------------------
+    // STEP 6: YOPMAIL — RETRIEVE RESET LINK & SET NEW PASSWORD
+    // -------------------------------------------------------------------------
+    console.log('\n===============================================================');
+    console.log(`🚀 [STEP 6] Opening Yopmail to retrieve reset link: ${randomUser.yopmailInbox}`);
+    console.log('===============================================================');
+
+    await yopmail.gotoInbox(randomUser.yopmailInbox);
+    const resetUrl = await yopmail.getResetPasswordLink(12, 4000);
+
+    expect(resetUrl).toBeTruthy();
+    expect(resetUrl).toContain('/reset-password');
+    console.log(`✅ [STEP 6] Retrieved reset link: ${resetUrl}`);
+
+    // Navigate to reset password page
+    await page.goto(resetUrl);
+    await page.bringToFront();
+    await resetPasswordPage.newPasswordInput.waitFor({ state: 'visible', timeout: 15000 });
+    await expect(resetPasswordPage.authCard).toBeVisible();
+    await page.waitForTimeout(1000);
+
+    const newPassword = 'NewPass1!';
+    console.log(`✍️ [STEP 6] Entering new password: ${newPassword}`);
+    await resetPasswordPage.fillNewPassword(newPassword);
+    await page.waitForTimeout(600);
+
+    console.log(`✍️ [STEP 6] Confirming new password: ${newPassword}`);
+    await resetPasswordPage.fillConfirmPassword(newPassword);
+    await page.waitForTimeout(600);
+
+    console.log('👉 [STEP 6] Submitting new password...');
+    await resetPasswordPage.clickSubmit();
+
+    // Verify password reset complete confirmation
+    await expect(resetPasswordPage.successTitle).toContainText(
+      authTestData.resetPasswordUiText.successTitle,
+      { timeout: 10000 },
+    );
+    console.log('✅ [STEP 6 COMPLETE] Password Reset Complete!');
+    await page.waitForTimeout(1200);
+
+    // Click Proceed to Login
+    const resetProceedBtn = page.locator('//button[normalize-space()="Proceed to Login"] | //a[@href="/login"]//button | //a[@href="/login"]');
+    try {
+      if (await resetProceedBtn.first().isVisible({ timeout: 4000 })) {
+        console.log('👉 [STEP 6] Clicking "Proceed to Login" button...');
+        await resetProceedBtn.first().click();
+      }
+    } catch {
+      console.log('ℹ️ [STEP 6] Auto-redirecting to /login...');
+    }
+
+    // -------------------------------------------------------------------------
+    // STEP 7: VERIFY OLD PASSWORD REJECTION & LOGIN WITH RESET PASSWORD
+    // -------------------------------------------------------------------------
+    console.log('\n===============================================================');
+    console.log(`🚀 [STEP 7] Verifying old password fails & logging in with new reset password`);
+    console.log('===============================================================');
+
+    await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath), { timeout: 15000 });
+    await expect(loginPage.authCard).toBeVisible();
+    await page.waitForTimeout(1000);
+
+    // Negative check: Attempt login with OLD password -> MUST FAIL
+    console.log(`🧪 [STEP 7.1] Testing old password (${randomUser.password}) - must be rejected...`);
+    await loginPage.fillUsername(randomUser.username);
+    await loginPage.fillPassword(randomUser.password);
+    await loginPage.clickLogin();
+    await expect(loginPage.errorAlert).toBeVisible({ timeout: 5000 });
+    console.log('✅ [STEP 7.1] Old password successfully rejected!');
+    await page.waitForTimeout(1000);
+
+    // Positive check: Login with NEW reset password -> MUST SUCCEED
+    console.log(`🚀 [STEP 7.2] Logging in with NEW reset password (${newPassword})...`);
+    await loginPage.fillUsername(randomUser.username);
+    await loginPage.fillPassword(newPassword);
+    await loginPage.clickLogin();
+
+    // Verify successful dashboard redirect
+    await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+    console.log('🎉 [STEP 7.2 COMPLETE] Successfully logged into Dashboard with NEW reset password!');
     console.log('===============================================================\n');
 
     // Keep dashboard open and visible on screen for 10 seconds so the user can verify
     console.log('👀 [DASHBOARD] Keeping Dashboard open for 10 seconds to confirm active login...');
     await page.waitForTimeout(10000);
 
-    // Save activated user for subsequent tests
+    // Save updated credentials
     activatedUser = {
       username: randomUser.username,
       email: randomUser.email,
-      password: randomUser.password,
-      verificationUrl,
+      password: newPassword,
+      verificationUrl: resetUrl,
     };
   });
 

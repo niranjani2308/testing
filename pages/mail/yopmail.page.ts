@@ -206,14 +206,14 @@ export class YopmailPage {
 
           // Look for the verification link inside the mail body iframe (#ifmail)
           const verificationLink = this.mailFrame.locator(
-            'a[href*="/set-password"], a:has-text("Verify Email & Set Password"), a:has-text("Verify Email"), a:has-text("Set Password")',
+            'a[href*="/set-password"], a[href*="/reset-password"], a:has-text("Verify Email & Set Password"), a:has-text("Reset Password"), a:has-text("Verify Email"), a:has-text("Set Password")',
           );
 
           await verificationLink.first().waitFor({ state: 'visible', timeout: 8000 });
           const href = await verificationLink.first().getAttribute('href');
 
-          if (href && href.includes('/set-password')) {
-            console.log(`🔗 [Yopmail] Verification link found: ${href}`);
+          if (href && (href.includes('/set-password') || href.includes('/reset-password'))) {
+            console.log(`🔗 [Yopmail] Verification/Reset link found: ${href}`);
             return href;
           }
         } else {
@@ -231,6 +231,60 @@ export class YopmailPage {
 
     throw new Error(
       `Could not find Set Password verification email on Yopmail after ${maxRetries} attempts.`,
+    );
+  }
+
+  /**
+   * Poll Yopmail inbox and retrieve the reset password URL (/reset-password?token=...)
+   */
+  async getResetPasswordLink(
+    maxRetries: number = 10,
+    retryDelayMs: number = 4000,
+  ): Promise<string> {
+    console.log('📬 [Yopmail] Searching for Password Reset email in inbox...');
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await this.dismissConsent();
+
+        if (await this.isHumanVerificationPresent()) {
+          await this.waitForHumanVerification();
+        }
+
+        const mailRows = this.inboxFrame.locator('.m, .lm, button.lm, a.lm, div.m');
+        const count = await mailRows.count();
+
+        if (count > 0) {
+          console.log(`✉️ [Yopmail] Password reset email arrived (${count} item(s))! Opening latest email...`);
+          await mailRows.first().click();
+          await this.page.waitForTimeout(2000);
+
+          const resetLink = this.mailFrame.locator(
+            'a[href*="/reset-password"], a:has-text("Reset Password"), a:has-text("Update Password"), a:has-text("Set New Password")',
+          );
+
+          await resetLink.first().waitFor({ state: 'visible', timeout: 8000 });
+          const href = await resetLink.first().getAttribute('href');
+
+          if (href && href.includes('/reset-password')) {
+            console.log(`🔗 [Yopmail] Reset Password link found: ${href}`);
+            return href;
+          }
+        } else {
+          console.log(`⏳ [Yopmail] Reset email not arrived yet (Attempt ${attempt}/${maxRetries}). Refreshing...`);
+        }
+      } catch {
+        // Retry if message hasn't appeared yet
+      }
+
+      if (attempt < maxRetries) {
+        await this.refresh();
+        await this.page.waitForTimeout(retryDelayMs);
+      }
+    }
+
+    throw new Error(
+      `Could not find Password Reset email on Yopmail after ${maxRetries} attempts.`,
     );
   }
 }
