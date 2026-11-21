@@ -206,19 +206,51 @@
 
 ### 5. YOPmail End-to-End Registration & Verification (`tests/auth/signup-functional-yopmail.spec.ts` — 10 Tests)
 
-- `TC-SIGNUP-E2E-001`: **Full End-to-End Flow**:
-  1. Register random user + dynamic YOPmail address on `/signup`
-  2. Verify "Verification Email Sent" success card
-  3. Open `yopmail.com` in secondary browser tab
-  4. Type mailbox name into `#login` and open inbox
-  5. Pause for user to tick Cloudflare Turnstile if prompted (resumes immediately upon click)
-  6. Locate incoming email in `#ifinbox` iframe
-  7. Extract verification URL from `#ifmail` iframe
-  8. Navigate to `/set-password?token=...`
-  9. Fill compliant 8-char password and confirm
-  10. Confirm "Account Activated!" and auto-redirect to `/login`
-  11. Log in with newly registered username & password
-  12. Confirm successful redirection to `/dashboard`
+- `TC-SIGNUP-E2E-001`: **Master End-to-End Continuous Journey Flow**:
+  1. **Stage 1 (Create an Account)**:
+     - Verify page title, subtitle, labels, and placeholders
+     - Verify content hygiene: scan page text for unwanted words (`undefined`, `null`, `NaN`, `TODO`, `dummy`, etc.)
+     - Verify UI styling: card padding $\ge 16$px, white background, button pointer cursor
+     - **Button enforcement & validation checks**:
+       - Empty submit $\rightarrow$ verifies username & email required errors, form submission blocked
+       - Username filled, email empty $\rightarrow$ verifies email required error
+       - Email filled, username empty $\rightarrow$ verifies username required error
+       - Boundary username (1 char) $\rightarrow$ verifies min length error
+       - Invalid email format (`notanemail`) $\rightarrow$ verifies email format error
+       - Typing into field clears error
+     - Fill valid dynamic random username and YOPmail address
+     - Click "Verify / Create Account" submit button
+     - Verify success card appears with "Verification Email Sent", displays submitted email, and 2-minute validity note
+  2. **Stage 2 (YOPmail Link Retrieval)**:
+     - Open YOPmail inbox in secondary browser tab
+     - Handle Cloudflare Turnstile human verification modal safely if displayed (pauses and waits for user click, auto-resumes once closed)
+     - Locate incoming email in `#ifinbox` iframe
+     - Extract verification URL from `#ifmail` iframe (`/set-password?token=...`)
+     - Validate token parameter presence and close secondary mail tab
+  3. **Stage 3 (Set Password Page)**:
+     - Navigate to extracted verification URL
+     - Verify Set Your Password card, title, 7-rule requirements checklist box
+     - Verify content hygiene: no unwanted words
+     - **Set Password functional & live rule validations**:
+       - Empty submit $\rightarrow$ verifies required errors, submission blocked
+       - Checklist test: enter `abc` (lowercase only) $\rightarrow$ verifies uppercase, number, and special character rules fail
+       - Boundary counter test: enter 9 characters (`LongPass1!`) $\rightarrow$ verifies `exceeds 8-character limit` error
+       - Mismatch test: enter valid password in new and different password in confirm $\rightarrow$ verifies mismatch error
+       - Visibility toggles: eye button toggles input types between `password` and `text`
+     - Enter compliant 8-character password (`Valid123!`) in both fields
+     - Click "Activate Account & Set Password"
+     - Verify "Account Activated!" success state and redirection to `/login`
+  4. **Stage 4 (Login Page & Dashboard)**:
+     - Verify arrival on `/login` page
+     - Verify UI elements and content hygiene
+     - **Login validations**:
+       - Empty submit $\rightarrow$ verifies username & password required errors
+       - Password visibility toggle test
+       - Negative login: attempt login with wrong password $\rightarrow$ verifies error alert, no redirection
+     - Positive login: enter newly registered username and newly activated password
+     - Click "Login" button
+     - Verify successful authentication and redirection to `/dashboard`
+     - Verify dashboard components loaded and visible
 - `TC-SIGNUP-E2E-002`: Re-registering existing pending email updates token
 - `TC-SIGNUP-E2E-003`: Success screen "Back to Login" button navigates to `/login`
 - `TC-SIGNUP-E2E-004`: Post-activation login with wrong password fails
