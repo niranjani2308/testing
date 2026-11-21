@@ -1,0 +1,27 @@
+{
+  "commonFlows": {
+    "email": "//input[@id='login-username']",
+    "username": "//input[@id='login-username']",
+    "userRequired": "//input[@id='login-username']/parent::div/following-sibling::p[contains(@class, 'text-red-600')]",
+    "password": "//input[@id='login-password']",
+    "passRequired": "//input[@id='login-password']/parent::div/following-sibling::p[contains(@class, 'text-red-600')]",
+    "loginbtn": "//form//button[@type='submit']",
+    "searchInput": "//input[contains(@placeholder, 'Search')]",
+    "searchClearBtn": "//input[contains(@placeholder, 'Search')]/following-sibling::button",
+    "submitBtn": "//button[@type='submit']",
+    "cancelBtn": "//button[normalize-space()='Cancel']",
+    "closeModalBtn": "//div[contains(@class, 'fixed')]//button[contains(@class, 'lucide-x') or .//*[name()='svg']]",
+    "backBtn": "//button[contains(@class, 'lucide-arrow-left')] | //a[contains(@class, 'lucide-arrow-left')]",
+    "toastNotification": "//*[@role='alert']",
+    "toastDismissBtn": "//button[@aria-label='Dismiss notification']",
+    "errorAlert": "//div[@role='alert' and contains(@class, 'bg-red-50')]",
+    "successAlert": "//div[@role='alert' and contains(@class, 'bg-emerald-50')]",
+    "loadingSpinner": "//*[@role='status'] | //*[contains(@class, 'animate-spin')]",
+    "brandLogo": "//*[text()='LifeTrack AI']",
+    "logout": "//button[@title='Sign Out' or normalize-space()='Sign Out']",
+    "logoutBtn": "//button[@title='Sign Out' or normalize-space()='Sign Out']",
+    "logoutModal": "//div[contains(., 'Sign Out Confirmation')]",
+    "logoutConfirmBtn": "//div[contains(., 'Sign Out Confirmation')]//button[normalize-space()='Sign Out']",
+    "logoutCancelBtn": "//div[contains(., 'Sign Out Confirmation')]//button[normalize-space()='Cancel']"
+  }
+}

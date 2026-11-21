@@ -1,0 +1,21 @@
+{
+  "sidebarNavigation": {
+    "sidebarContainer": "aside, [role='navigation']",
+    "collapseToggleBtn": "button[aria-label='Collapse Sidebar'], button[aria-label='Expand Sidebar']",
+    "navDashboard": "button:has-text('Dashboard')",
+    "navJourneys": "button:has-text('Journey')",
+    "navNotes": "button:has-text('Notes')",
+    "navTasks": "button:has-text('Tasks')",
+    "navTracker": "button:has-text('Tracker')",
+    "copilotBtn": "button[title='Open AI Copilot'], button:has-text('Ask Copilot')",
+    "userSettingsBtn": "button:has-text('Settings'), button[title*='@']",
+    "userDisplayName": "span.truncate",
+    "signOutBtn": "button[title='Sign Out'], button:has-text('Sign Out')"
+  },
+  "mobileNavigation": {
+    "mobileHeader": "div.md\\:hidden",
+    "mobileMenuToggle": "button[aria-label='Toggle Navigation']",
+    "mobileDrawerBackdrop": ".fixed.inset-0.bg-slate-950\\/60",
+    "mobileDrawer": "aside.md\\:hidden"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "playwrite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "clean": "node scripts/clean-results.js",
+    "pretest": "node scripts/clean-results.js",
+    "pretest:ui": "node scripts/clean-results.js",
+    "pretest:login": "node scripts/clean-results.js",
+    "pretest:login:ui": "node scripts/clean-results.js",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:login": "playwright test tests/auth/login*",
+    "test:login:ui": "playwright test tests/auth/login* --ui",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6"
+  }
+}

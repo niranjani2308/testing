@@ -1,0 +1,30 @@
+{
+  "trackerSection": {
+    "pageTitle": "h1:has-text('Progress Tracker')",
+    "journeyTab": "button:has-text('Journey')",
+    "tasksTab": "button:has-text('Tasks')",
+    "journeySearchInput": "input[placeholder*='Search journey title']",
+    "taskSearchInput": "input[placeholder*='Search work plan or task']",
+    "journeyResultItem": "div:has(span:has-text('Journey')):has(h3)",
+    "crossTabTaskPlanItem": "div:has(span:has-text('Task Plan')):has(h3)",
+    "trackJourneyBtn": "div.group:has(h3)",
+    "backToSearchResultsBtn": "button:has-text('Back to search results')"
+  },
+  "journeyProgressSection": {
+    "journeyName": "h2",
+    "journeyDescription": "p.leading-relaxed",
+    "metricTotalDailyNotes": "div:has(span:has-text('Total Daily Notes')) span.text-2xl",
+    "metricDaysWithUpdates": "div:has(span:has-text('Days with Recorded Updates')) span.text-2xl",
+    "metricLastUpdatedDate": "div:has(span:has-text('Last Updated Date')) span.text-base",
+    "dailyTimeline": "div:has-text('Daily Activity Timeline')"
+  },
+  "taskPlanProgressSection": {
+    "planResultItem": "div:has(h3):has(span:has-text('Plan'))",
+    "progressBar": "div.bg-indigo-600.h-2, [role='progressbar']",
+    "progressPercentage": "span:has-text('%')",
+    "metricTotalTasks": "div:has(span:has-text('Total Tasks')) span.text-2xl",
+    "metricCompletedTasks": "div:has(span:has-text('Completed')) span.text-2xl",
+    "metricOverdueTasks": "div:has(span:has-text('Overdue')) span.text-2xl",
+    "taskList": "div.divide-y:has(div:has(h4))"
+  }
+}

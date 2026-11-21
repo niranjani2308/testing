@@ -1,0 +1,37 @@
+{
+  "journeySection": {
+    "pageTitle": "h1:has-text('Journeys')",
+    "newJourneyBtn": "button:has-text('New Journey')",
+    "createPromptBtn": "button:has-text('Create Journey')",
+    "searchInput": "input[placeholder*='Search journeys']",
+    "clearSearchBtn": "input[placeholder*='Search journeys'] ~ button",
+    "totalCount": "text='Total Journeys:'",
+    "journeyCard": "div.group:has(h3)",
+    "journeyTitle": "h3",
+    "journeyDescription": "p.line-clamp-2",
+    "editJourneyBtn": "button[title='Edit Journey']",
+    "deleteJourneyBtn": "button[title='Delete Journey']",
+    "openTimelineLink": "div:has-text('Open Daily Notes Timeline')"
+  },
+  "createJourneyModal": {
+    "modal": "div:has-text('Create New Journey')",
+    "titleInput": "div:has-text('Create New Journey') input[placeholder*='Learning Python']",
+    "descriptionTextarea": "div:has-text('Create New Journey') textarea",
+    "submitBtn": "div:has-text('Create New Journey') button[type=\"submit\"]",
+    "cancelBtn": "div:has-text('Create New Journey') button:has-text('Cancel')",
+    "closeBtn": "div:has-text('Create New Journey') button:has(svg.w-5)"
+  },
+  "editJourneyModal": {
+    "modal": "div:has-text('Edit Journey')",
+    "titleInput": "div:has-text('Edit Journey') input[placeholder*='Learning Python']",
+    "descriptionTextarea": "div:has-text('Edit Journey') textarea",
+    "submitBtn": "div:has-text('Edit Journey') button[type=\"submit\"]",
+    "cancelBtn": "div:has-text('Edit Journey') button:has-text('Cancel')"
+  },
+  "journeyWorkspace": {
+    "backBtn": "button:has-text('Back to Journeys'), button:has(svg.lucide-arrow-left)",
+    "workspaceTitle": "div:has-text('Continuous Documentation') ~ h1, h1",
+    "newDailyNoteBtn": "button:has-text('New Note'), button:has-text('Add Note')",
+    "dailyNoteCard": "div.rounded-2xl:has(h4), div:has(span:has-text('Day'))"
+  }
+}

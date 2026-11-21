@@ -1,0 +1,46 @@
+{
+  "notesSection": {
+    "pageTitle": "h1:has-text('My Notes')",
+    "newNoteBtn": "button:has-text('New Note')",
+    "searchInput": "input[placeholder*='Search notes by title']",
+    "clearSearchBtn": "input[placeholder*='Search notes'] ~ button",
+    "activeTab": "button:has-text('Active')",
+    "archivedTab": "button:has-text('Archived')",
+    "tagFilterPill": "button:has-text('#'), div.flex-wrap button",
+    "noteCard": "div.group:has(h3), div.bg-white:has(h3)",
+    "noteTitle": "h3",
+    "noteContent": "div.text-slate-600, div.whitespace-pre-wrap",
+    "pinNoteBtn": "button[title='Pin Note'], button[title='Unpin Note']",
+    "editNoteBtn": "button[title='Edit Note']",
+    "deleteNoteBtn": "button[title='Delete Note']",
+    "archiveNoteBtn": "button[title='Archive Note'], button[title='Unarchive Note']",
+    "checklistItem": "button[role='checkbox'], input[type='checkbox']",
+    "copyCodeBtn": "button:has-text('Copy'), button:has-text('Copied')",
+    "quickAttachInput": "input[type='file'].hidden"
+  },
+  "noteModal": {
+    "modal": "div:has-text('New Note'), div:has-text('Edit Note')",
+    "titleInput": "input[placeholder='Title (optional)']",
+    "contentArea": "textarea[placeholder*='Write your note']",
+    "tagInput": "input[placeholder*='tag']",
+    "addTagBtn": "button:has-text('Add Tag'), button:has(svg.lucide-plus)",
+    "pinToggle": "button[title*='Pin'], button:has-text('Pin Note')",
+    "reminderToggle": "button:has-text('Set Reminder')",
+    "reminderDateInput": "input[type='datetime-local'], input[type='date']",
+    "codeSnippetToggle": "button:has-text('Add Code')",
+    "codeSnippetArea": "textarea[placeholder*='code snippet']",
+    "codeLanguageSelect": "select",
+    "fileUploadInput": "input[type='file']:not(.hidden)",
+    "submitBtn": "button[type='submit']:has-text('Save Note'), button[type='submit']:has-text('Create Note')",
+    "cancelBtn": "button:has-text('Cancel')",
+    "closeBtn": "div.fixed.inset-0 button:has(svg.w-5)",
+    "draftSavedIndicator": "text='Draft saved locally'",
+    "restoreDraftBtn": "button:has-text('Restore Draft')",
+    "discardDraftBtn": "button:has-text('Discard')"
+  },
+  "attachmentsSection": {
+    "previewBtn": "button[title='Preview']",
+    "downloadBtn": "button[title='Download']",
+    "deleteBtn": "button[title='Remove']"
+  }
+}
