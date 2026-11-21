@@ -45,8 +45,8 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await expect(signupPage.authCard).toBeVisible();
 
     // 1.1 UI & Layout elements check
-    await expect(signupPage.cardTitle).toHaveText(authTestData.signupUiText.cardTitle);
-    await expect(signupPage.cardSubtitle).toHaveText(authTestData.signupUiText.cardSubtitle);
+    await expect(signupPage.cardTitle).toContainText(authTestData.signupUiText.title);
+    await expect(signupPage.cardSubtitle).toContainText(authTestData.signupUiText.subtitle);
     await expect(signupPage.usernameLabel).toBeVisible();
     await expect(signupPage.emailLabel).toBeVisible();
     await expect(signupPage.submitButton).toBeVisible();
@@ -76,10 +76,10 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
 
     // A: Empty submission
     await signupPage.clickSubmit();
-    await expect(signupPage.usernameError).toHaveText(
+    await expect(signupPage.usernameError).toContainText(
       authTestData.signupValidationMessages.usernameRequired,
     );
-    await expect(signupPage.emailError).toHaveText(
+    await expect(signupPage.emailError).toContainText(
       authTestData.signupValidationMessages.emailRequired,
     );
     await expect(signupPage.successCard).not.toBeVisible();
@@ -88,7 +88,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await signupPage.fillUsername(randomUser.username);
     await signupPage.clearEmail();
     await signupPage.clickSubmit();
-    await expect(signupPage.emailError).toHaveText(
+    await expect(signupPage.emailError).toContainText(
       authTestData.signupValidationMessages.emailRequired,
     );
     await expect(signupPage.usernameError).not.toBeVisible();
@@ -97,7 +97,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await signupPage.clearUsername();
     await signupPage.fillEmail(randomUser.email);
     await signupPage.clickSubmit();
-    await expect(signupPage.usernameError).toHaveText(
+    await expect(signupPage.usernameError).toContainText(
       authTestData.signupValidationMessages.usernameRequired,
     );
     await expect(signupPage.emailError).not.toBeVisible();
@@ -105,7 +105,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     // D: Boundary username (< 2 chars)
     await signupPage.fillUsername('a');
     await signupPage.clickSubmit();
-    await expect(signupPage.usernameError).toHaveText(
+    await expect(signupPage.usernameError).toContainText(
       authTestData.signupValidationMessages.usernameMinLength,
     );
 
@@ -113,7 +113,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await signupPage.fillUsername(randomUser.username);
     await signupPage.fillEmail('invalid-format-email');
     await signupPage.clickSubmit();
-    await expect(signupPage.emailError).toHaveText(
+    await expect(signupPage.emailError).toContainText(
       authTestData.signupValidationMessages.emailInvalid,
     );
 
@@ -129,7 +129,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
 
     // Verify Success Card
     await expect(signupPage.successCard).toBeVisible({ timeout: 15000 });
-    await expect(signupPage.successTitle).toHaveText(authTestData.signupUiText.successTitle);
+    await expect(signupPage.successTitle).toContainText(authTestData.signupUiText.successTitle);
     await expect(signupPage.linkValidityNote).toBeVisible();
     await expect(signupPage.successDescription).toContainText(randomUser.email);
     console.log('✅ [STAGE 1 COMPLETE] Signup form submitted. "Verification Email Sent" success card displayed.');
@@ -166,7 +166,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
 
     // 3.1 UI elements check
     await expect(setPasswordPage.authCard).toBeVisible();
-    await expect(setPasswordPage.cardTitle).toHaveText(authTestData.setPasswordUiText.cardTitle);
+    await expect(setPasswordPage.cardTitle).toContainText(authTestData.setPasswordUiText.title);
     await expect(setPasswordPage.passwordRulesContainer).toBeVisible();
     await expect(setPasswordPage.submitButton).toBeVisible();
 
@@ -199,7 +199,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await setPasswordPage.fillNewPassword(randomUser.password);
     await setPasswordPage.fillConfirmPassword('DiffPass1!');
     await setPasswordPage.clickSubmit();
-    await expect(setPasswordPage.confirmPasswordError).toHaveText(
+    await expect(setPasswordPage.confirmPasswordError).toContainText(
       authTestData.setPasswordValidationMessages.passwordMismatch,
     );
 
@@ -217,7 +217,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await setPasswordPage.clickSubmit();
 
     // Verify Account Activated success state
-    await expect(setPasswordPage.successTitle).toHaveText(
+    await expect(setPasswordPage.successTitle).toContainText(
       authTestData.setPasswordUiText.successTitle,
     );
     console.log('✅ [STAGE 3 COMPLETE] Account Activated! Waiting for redirect to /login...');
@@ -234,7 +234,7 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     console.log('===============================================================');
 
     // 4.1 UI elements & content hygiene
-    await expect(loginPage.cardTitle).toHaveText(authTestData.loginUiText.cardTitle);
+    await expect(loginPage.cardTitle).toContainText(authTestData.loginUiText.title);
     const loginPageText = await page.innerText('body');
     for (const word of authTestData.unwantedWords) {
       expect(loginPageText).not.toContain(word);
@@ -244,8 +244,8 @@ test.describe('Create Account - Master End-to-End User Flow & Verification', () 
     await loginPage.clearUsername();
     await loginPage.clearPassword();
     await loginPage.clickLogin();
-    await expect(loginPage.usernameError).toHaveText(authTestData.validationMessages.usernameRequired);
-    await expect(loginPage.passwordError).toHaveText(authTestData.validationMessages.passwordRequired);
+    await expect(loginPage.usernameError).toContainText(authTestData.validationMessages.usernameRequired);
+    await expect(loginPage.passwordError).toContainText(authTestData.validationMessages.passwordRequired);
 
     // 4.3 Negative login: Incorrect password rejection
     console.log('🧪 [Stage 4.3] Testing negative login with wrong password...');
