@@ -16,6 +16,7 @@ export class IndexSelectors {
   signupSection = auth.signupSection;
   forgotPasswordSection = auth.forgotPasswordSection;
   setPasswordSection = auth.setPasswordSection;
+  resetPasswordSection = (auth as any).resetPasswordSection;
   yopmailSection = auth.yopmailSection;
 
   // Navigation & Workspace Layout Locators

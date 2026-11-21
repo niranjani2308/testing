@@ -148,6 +148,60 @@ export const authTestData = {
     },
   },
 
+  // Forgot Password Expected UI Copy & Text Content
+  forgotPasswordUiText: {
+    title: 'Forgot Password',
+    subtitle: 'Enter your email to receive a secure 2-minute password reset link',
+    emailLabel: 'Registered Email Address',
+    emailPlaceholder: 'e.g. john@example.com',
+    submitBtnText: 'Send Password Reset Link',
+    successTitle: 'Password Recovery Dispatched',
+    linkValidityNote: 'Link valid for 2 minutes',
+    returnToLoginBtnText: 'Return to Login',
+    backToLoginText: 'Back to Login',
+  },
+
+  // Forgot Password Validation Messages
+  forgotPasswordValidationMessages: {
+    emailRequired: 'Please enter your email address',
+    emailInvalid: 'Please enter a valid email address',
+    rateLimitMessage: 'Too many password reset requests',
+  },
+
+  // Reset Password Expected UI Copy & Text Content
+  resetPasswordUiText: {
+    title: 'Reset Password',
+    subtitle: 'Enter a new secure password for your account',
+    newPasswordLabel: 'New Password',
+    newPasswordPlaceholder: 'Enter new password (max 8 characters)',
+    confirmPasswordLabel: 'Confirm Password',
+    confirmPasswordPlaceholder: 'Re-enter new password',
+    submitBtnText: 'Update Password',
+    successTitle: 'Password Reset Complete!',
+    proceedToLoginBtnText: 'Proceed to Login',
+    expiredTitle: 'Link Expired',
+    expiredSubtitle: 'This password reset link is no longer valid',
+    expiredAlertTitle: 'Password Reset Link Expired',
+    invalidTitle: 'Invalid Link',
+    invalidSubtitle: 'This security link is invalid or already used',
+    invalidAlertTitle: 'Invalid or Used Security Link',
+    requestFreshLinkBtnText: 'Request a Fresh Reset Link',
+    returnToLoginBtnText: 'Return to Login',
+    backToLoginBtnText: 'Back to Login',
+  },
+
+  // Reset Password Validation Messages
+  resetPasswordValidationMessages: {
+    newPasswordRequired: 'New password is required',
+    confirmPasswordRequired: 'Confirm password is required',
+    passwordMismatch: 'Passwords do not match',
+    passwordMustMeetRequirements: 'Password must meet all requirements below (exactly 8 characters)',
+    exceeds8Chars: (currentLength: number) =>
+      `Password exceeds 8-character limit (${currentLength}/8 characters)`,
+    confirmExceeds8Chars: (currentLength: number) =>
+      `Confirm password exceeds 8-character limit (${currentLength}/8 characters)`,
+  },
+
   // Dynamic Test Data Generators for Random Users, Passwords & Yopmail
   generators: {
     randomUsername: generateRandomUsername,
@@ -163,5 +217,22 @@ export const authTestData = {
     signupPath: '/signup',
     loginPath: '/login',
     setPasswordPath: '/set-password',
+    resetPasswordPath: '/reset-password',
+  },
+
+  // API Endpoints
+  apiEndpoints: {
+    register: '/auth/register',
+    signup: '/auth/signup',
+    login: '/auth/login',
+    logout: '/auth/logout',
+    setPassword: '/auth/set-password',
+    verifyEmail: '/auth/verify-email',
+    validateToken: '/auth/validate-token',
+    resendVerification: '/auth/resend-verification',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
+    me: '/auth/me',
+    dbCheck: '/auth/db-check',
   },
 } as const;

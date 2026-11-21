@@ -277,4 +277,245 @@ test.describe('Set Password Page - UI, Security & Validation Tests', () => {
       );
     });
   });
+
+  // =========================================================================
+  // CATEGORY 5: EXPIRED TOKEN UI & NAVIGATION
+  // =========================================================================
+  test.describe('5. Expired Token — UI & Navigation', () => {
+    test.beforeEach(async ({ page, setPasswordPage }) => {
+      await page.route('**/auth/validate-token*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            valid: false,
+            reason: 'expired',
+            message: 'Verification link has expired (exceeded 2 minutes). Please request a new link.',
+          }),
+        });
+      });
+
+      await setPasswordPage.goto('expired_mock_token_xyz');
+    });
+
+    test('TC-SETPW-SEC-004: (Negative) Expired token should show Link Expired card with correct title, alert, and NO password form', async ({
+      setPasswordPage,
+    }) => {
+      await expect(setPasswordPage.expiredCardTitle).toBeVisible({ timeout: 10000 });
+      await expect(setPasswordPage.expiredCardTitle).toHaveText(authTestData.setPasswordUiText.expiredTitle);
+
+      await expect(setPasswordPage.expiredAlertTitle).toBeVisible();
+      await expect(setPasswordPage.expiredAlertTitle).toHaveText(authTestData.setPasswordUiText.expiredAlertTitle);
+
+      // Password inputs must NOT be rendered on expired page
+      await expect(setPasswordPage.newPasswordInput).not.toBeVisible();
+      await expect(setPasswordPage.confirmPasswordInput).not.toBeVisible();
+      await expect(setPasswordPage.submitButton).not.toBeVisible();
+    });
+
+    test('TC-SETPW-SEC-005: (Positive) Expired card "Request New Verification Link" should navigate to /signup', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      await expect(setPasswordPage.expiredCardTitle).toBeVisible({ timeout: 10000 });
+      await setPasswordPage.clickRequestNewLink();
+      await expect(page).toHaveURL(new RegExp(authTestData.links.signupPath));
+    });
+
+    test('TC-SETPW-SEC-006: (Positive) Expired card "Back to Login" should navigate to /login', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      await expect(setPasswordPage.expiredCardTitle).toBeVisible({ timeout: 10000 });
+      await setPasswordPage.clickBackToLogin();
+      await expect(page).toHaveURL(new RegExp(authTestData.links.loginPath));
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 6: ADDITIONAL FORM UI & ATTRIBUTES
+  // =========================================================================
+  test.describe('6. Additional Form UI & Accessibility', () => {
+    test.beforeEach(async ({ page, setPasswordPage }) => {
+      await page.route('**/auth/validate-token*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ valid: true }),
+        });
+      });
+
+      await setPasswordPage.goto('valid_mock_token_abc123');
+    });
+
+    test('TC-SETPW-UI-004: Submit button text should be "Activate Account & Set Password"', async ({
+      setPasswordPage,
+    }) => {
+      await expect(setPasswordPage.submitButton).toBeVisible();
+      await expect(setPasswordPage.submitButton).toHaveText(authTestData.setPasswordUiText.submitBtnText);
+    });
+
+    test('TC-SETPW-UI-005: Footer should display "Already verified?" with Sign In link to /login', async ({
+      setPasswordPage,
+    }) => {
+      const footerText = setPasswordPage.page.locator('//p[contains(., "Already verified?")]');
+      await expect(footerText).toBeVisible();
+
+      const signInLink = setPasswordPage.page.locator('//a[@href="/login"]');
+      await expect(signInLink.first()).toBeVisible();
+    });
+
+    test('TC-SETPW-A11Y-001: Create Password input should have autofocus on page mount', async ({
+      setPasswordPage,
+    }) => {
+      await expect(setPasswordPage.newPasswordInput).toBeFocused({ timeout: 3000 });
+    });
+
+    test('TC-SETPW-A11Y-002: Tab navigation should reach Confirm Password from Create Password', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      await setPasswordPage.newPasswordInput.focus();
+      // Tab through (may pass toggle visibility button first)
+      for (let i = 0; i < 3; i++) {
+        await page.keyboard.press('Tab');
+        const isFocused = await setPasswordPage.confirmPasswordInput.evaluate(
+          (el) => el === document.activeElement,
+        );
+        if (isFocused) break;
+      }
+      await expect(setPasswordPage.confirmPasswordInput).toBeFocused();
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 7: ADDITIONAL VALIDATION — POSITIVE & NEGATIVE SCENARIOS
+  // =========================================================================
+  test.describe('7. Additional Validation — Positive & Negative', () => {
+    test.beforeEach(async ({ page, setPasswordPage }) => {
+      await page.route('**/auth/validate-token*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ valid: true }),
+        });
+      });
+
+      await setPasswordPage.goto('valid_mock_token_abc123');
+    });
+
+    test('TC-SETPW-RULES-007: (Negative) Password too short (5 chars) should fail minimum length rule', async ({
+      setPasswordPage,
+    }) => {
+      const tooShort = authTestData.signupInputs.invalidPasswords.tooShort5Chars;
+      await setPasswordPage.fillNewPassword(tooShort);
+
+      await expect(setPasswordPage.ruleMinLength).toContainText('•');
+    });
+
+    test('TC-SETPW-LEN-003: (Positive) Typing a valid 8-char password should clear the newPassword exceeds-limit error', async ({
+      setPasswordPage,
+    }) => {
+      // Trigger error with >8 chars
+      const tooLong = authTestData.generators.invalidPassword('too_long');
+      await setPasswordPage.fillNewPassword(tooLong);
+      await expect(setPasswordPage.newPasswordError).toBeVisible();
+
+      // Fix with valid 8-char password → error clears
+      const valid = authTestData.generators.validPassword();
+      await setPasswordPage.fillNewPassword(valid);
+      await expect(setPasswordPage.newPasswordError).not.toBeVisible();
+    });
+
+    test('TC-SETPW-LEN-004: (Positive) Typing a valid confirm password should clear the confirmPassword exceeds-limit error', async ({
+      setPasswordPage,
+    }) => {
+      const tooLong = authTestData.generators.invalidPassword('too_long');
+      await setPasswordPage.fillConfirmPassword(tooLong);
+      await expect(setPasswordPage.confirmPasswordError).toBeVisible();
+
+      const valid = authTestData.generators.validPassword();
+      await setPasswordPage.fillConfirmPassword(valid);
+      await expect(setPasswordPage.confirmPasswordError).not.toBeVisible();
+    });
+
+    test('TC-SETPW-MISMATCH-002: (Positive) Matching valid passwords should NOT trigger mismatch error on submit', async ({
+      setPasswordPage,
+    }) => {
+      const validPass = authTestData.generators.validPassword();
+      await setPasswordPage.fillNewPassword(validPass);
+      await setPasswordPage.fillConfirmPassword(validPass);
+      await setPasswordPage.clickSubmit();
+
+      // confirmPassword mismatch error must not appear when passwords match
+      await expect(setPasswordPage.confirmPasswordError).not.toBeVisible();
+    });
+
+    test('TC-SETPW-REQ-002: (Negative) Submitting with empty newPassword should show newPassword required error', async ({
+      setPasswordPage,
+    }) => {
+      const validPass = authTestData.generators.validPassword();
+      await setPasswordPage.fillConfirmPassword(validPass);
+      await setPasswordPage.clickSubmit();
+
+      await expect(setPasswordPage.newPasswordError).toBeVisible();
+      await expect(setPasswordPage.newPasswordError).toContainText(
+        authTestData.setPasswordValidationMessages.newPasswordRequired,
+      );
+    });
+
+    test('TC-SETPW-REQ-003: (Negative) Submitting with empty confirmPassword should show confirmPassword required error', async ({
+      setPasswordPage,
+    }) => {
+      const validPass = authTestData.generators.validPassword();
+      await setPasswordPage.fillNewPassword(validPass);
+      await setPasswordPage.clickSubmit();
+
+      await expect(setPasswordPage.confirmPasswordError).toBeVisible();
+      await expect(setPasswordPage.confirmPasswordError).toContainText(
+        authTestData.setPasswordValidationMessages.confirmPasswordRequired,
+      );
+    });
+
+    test('TC-SETPW-NEG-001: (Negative) Submitting a non-compliant password should show "must meet all requirements" error', async ({
+      setPasswordPage,
+    }) => {
+      const tooShort = authTestData.signupInputs.invalidPasswords.tooShort5Chars;
+      await setPasswordPage.fillNewPassword(tooShort);
+      await setPasswordPage.fillConfirmPassword(tooShort);
+      await setPasswordPage.clickSubmit();
+
+      await expect(setPasswordPage.newPasswordError).toBeVisible();
+      await expect(setPasswordPage.newPasswordError).toContainText(
+        authTestData.setPasswordValidationMessages.passwordMustMeetRequirements,
+      );
+    });
+
+    test('TC-SETPW-POS-001: (Positive) Valid password submission should show "Account Activated!" success card (mocked backend)', async ({
+      setPasswordPage,
+      page,
+    }) => {
+      // Mock set-password API to return success
+      await page.route('**/auth/set-password', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Your password has been set successfully! Your account is now ACTIVE.',
+            username: 'testuser',
+          }),
+        });
+      });
+
+      const validPass = authTestData.generators.validPassword();
+      await setPasswordPage.fillNewPassword(validPass);
+      await setPasswordPage.fillConfirmPassword(validPass);
+      await setPasswordPage.clickSubmit();
+
+      await expect(setPasswordPage.successCard).toBeVisible({ timeout: 5000 });
+      await expect(setPasswordPage.successTitle).toHaveText(
+        authTestData.setPasswordUiText.successTitle,
+      );
+    });
+  });
 });

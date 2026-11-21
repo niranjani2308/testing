@@ -293,4 +293,201 @@ test.describe('Create Account (Signup) Page - UI & Field Validation Tests', () =
       await expect(signupPage.submitButton).toBeVisible();
     });
   });
+
+  // =========================================================================
+  // CATEGORY 8: KEYBOARD FORM SUBMISSION
+  // =========================================================================
+  test.describe('8. Keyboard Form Submission', () => {
+    test('TC-SIGNUP-VAL-005: Pressing Enter on username field should trigger form validation', async ({
+      signupPage,
+      page,
+    }) => {
+      await signupPage.usernameInput.focus();
+      await page.keyboard.press('Enter');
+
+      await expect(signupPage.usernameError).toBeVisible();
+      await expect(signupPage.emailError).toBeVisible();
+    });
+
+    test('TC-SIGNUP-VAL-006: Pressing Enter on email field should trigger form validation', async ({
+      signupPage,
+      page,
+    }) => {
+      await signupPage.emailInput.focus();
+      await page.keyboard.press('Enter');
+
+      await expect(signupPage.usernameError).toBeVisible();
+      await expect(signupPage.emailError).toBeVisible();
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 9: BACKEND RESPONSE HANDLING — POSITIVE & NEGATIVE (Mocked API)
+  // =========================================================================
+  test.describe('9. Backend Response Handling — Positive & Negative (Mocked API)', () => {
+    test('TC-SIGNUP-UI-007: (Positive) Submit button should show loading/disabled state during form submission', async ({
+      signupPage,
+      page,
+    }) => {
+      // Mock register API with 3-second delay
+      await page.route('**/auth/register', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Success', link: '', user: {} }),
+        });
+      });
+
+      await signupPage.fillUsername('loadtestuser');
+      await signupPage.fillEmail('loadtest@yopmail.com');
+      await signupPage.clickSubmit();
+
+      // During loading, the button should be disabled
+      await expect(signupPage.submitButton).toBeDisabled();
+    });
+
+    test('TC-SIGNUP-UI-008: (Negative) Should display error when registering an already-verified email (409 Conflict)', async ({
+      signupPage,
+      page,
+    }) => {
+      await page.route('**/auth/register', async (route) => {
+        await route.fulfill({
+          status: 409,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: authTestData.signupValidationMessages.emailAlreadyRegistered,
+          }),
+        });
+      });
+
+      await signupPage.fillUsername('duplicateuser');
+      await signupPage.fillEmail('existing@yopmail.com');
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.errorAlert).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.errorAlert).toContainText(
+        authTestData.signupValidationMessages.emailAlreadyRegistered,
+      );
+    });
+
+    test('TC-SIGNUP-UI-009: (Negative) Should display error when registering a taken username (409 Conflict)', async ({
+      signupPage,
+      page,
+    }) => {
+      await page.route('**/auth/register', async (route) => {
+        await route.fulfill({
+          status: 409,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: authTestData.signupValidationMessages.usernameAlreadyTaken,
+          }),
+        });
+      });
+
+      await signupPage.fillUsername('taken_username');
+      await signupPage.fillEmail('new_email@yopmail.com');
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.errorAlert).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.errorAlert).toContainText(
+        authTestData.signupValidationMessages.usernameAlreadyTaken,
+      );
+    });
+
+    test('TC-SIGNUP-UI-010: (Positive) Success card should display the submitted email and verification description', async ({
+      signupPage,
+      page,
+    }) => {
+      const testEmail = 'display_test@yopmail.com';
+
+      await page.route('**/auth/register', async (route) => {
+        await route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Registration successful!',
+            link: 'http://localhost:3000/set-password?token=mock',
+            user: { id: 1, username: 'display_test', email: testEmail, status: 'PENDING' },
+          }),
+        });
+      });
+
+      await signupPage.fillUsername('display_test');
+      await signupPage.fillEmail(testEmail);
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.successCard).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.successTitle).toHaveText(authTestData.signupUiText.successTitle);
+      await expect(signupPage.successDescription).toContainText(testEmail);
+      await expect(signupPage.linkValidityNote).toBeVisible();
+    });
+
+    test('TC-SIGNUP-UI-011: (Negative) Should display error when backend returns 429 throttling', async ({
+      signupPage,
+      page,
+    }) => {
+      await page.route('**/auth/register', async (route) => {
+        await route.fulfill({
+          status: 429,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Too many registration attempts. Please wait 58 seconds before requesting another verification email.',
+          }),
+        });
+      });
+
+      await signupPage.fillUsername('throttle_user');
+      await signupPage.fillEmail('throttle@yopmail.com');
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.errorAlert).toBeVisible({ timeout: 5000 });
+      await expect(signupPage.errorAlert).toContainText('Too many registration attempts');
+    });
+  });
+
+  // =========================================================================
+  // CATEGORY 10: NEGATIVE — ERROR CLEARING & FIELD INTERACTIONS
+  // =========================================================================
+  test.describe('10. Negative — Error Clearing & Field Interactions', () => {
+    test('TC-SIGNUP-NEG-001: Clearing username after valid input and submitting should show username required', async ({
+      signupPage,
+    }) => {
+      await signupPage.fillUsername('validuser');
+      await signupPage.clearUsername();
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.usernameError).toBeVisible();
+      await expect(signupPage.usernameError).toContainText(
+        authTestData.signupValidationMessages.usernameRequired,
+      );
+    });
+
+    test('TC-SIGNUP-NEG-002: Clearing email after valid input and submitting should show email required', async ({
+      signupPage,
+    }) => {
+      await signupPage.fillEmail('valid@test.com');
+      await signupPage.clearEmail();
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.emailError).toBeVisible();
+      await expect(signupPage.emailError).toContainText(
+        authTestData.signupValidationMessages.emailRequired,
+      );
+    });
+
+    test('TC-SIGNUP-NEG-003: Submitting with valid username but invalid email should only show email error', async ({
+      signupPage,
+    }) => {
+      await signupPage.fillUsername(authTestData.generators.randomUsername());
+      await signupPage.fillEmail('not-an-email');
+      await signupPage.clickSubmit();
+
+      await expect(signupPage.usernameError).not.toBeVisible();
+      await expect(signupPage.emailError).toBeVisible();
+      await expect(signupPage.emailError).toContainText(
+        authTestData.signupValidationMessages.emailInvalid,
+      );
+    });
+  });
 });
