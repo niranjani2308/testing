@@ -10,7 +10,9 @@ export const authTestData = {
   // Expected Login UI Copy & Text Content
   uiText: {
     title: 'Welcome Back',
+    cardTitle: 'Welcome Back',
     subtitle: 'Sign in to your account with your username and password',
+    cardSubtitle: 'Sign in to your account with your username and password',
     usernameLabel: 'Username or Email',
     usernamePlaceholder: 'e.g. john_doe or john@example.com',
     passwordLabel: 'Password',
@@ -20,6 +22,14 @@ export const authTestData = {
     forgotPasswordText: 'Forgot Password?',
     signupPromptPrefix: "Don't have an account?",
     signupLinkText: 'Create an Account / Sign Up',
+  },
+
+  // Alias for Login UI Text
+  loginUiText: {
+    title: 'Welcome Back',
+    cardTitle: 'Welcome Back',
+    subtitle: 'Sign in to your account with your username and password',
+    cardSubtitle: 'Sign in to your account with your username and password',
   },
 
   // Actual Validation Messages for Login
@@ -32,7 +42,9 @@ export const authTestData = {
   // Expected Signup UI Copy & Text Content
   signupUiText: {
     title: 'Create an Account',
+    cardTitle: 'Create an Account',
     subtitle: 'Enter your username and email to receive a secure 2-minute verification link',
+    cardSubtitle: 'Enter your username and email to receive a secure 2-minute verification link',
     usernameLabel: 'Username',
     usernamePlaceholder: 'e.g. john_doe',
     emailLabel: 'Email Address',
@@ -59,7 +71,9 @@ export const authTestData = {
   // Expected Set Password UI Copy & Text Content
   setPasswordUiText: {
     title: 'Set Your Password',
+    cardTitle: 'Set Your Password',
     subtitle: 'Create a secure password to verify your email and activate your account',
+    cardSubtitle: 'Create a secure password to verify your email and activate your account',
     newPasswordLabel: 'Create Password',
     newPasswordPlaceholder: 'Enter secure password (max 8 characters)',
     confirmPasswordLabel: 'Confirm Password',
