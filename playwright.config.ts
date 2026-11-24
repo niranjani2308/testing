@@ -41,12 +41,13 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  /* Configure projects for major browsers */
+  /* Configure unified browser project */
   projects: [
     {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
         launchOptions: {
           args: [
             '--disable-blink-features=AutomationControlled',

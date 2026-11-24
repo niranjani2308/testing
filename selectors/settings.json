@@ -1,0 +1,11 @@
+{
+  "settingsSection": {
+    "pageTitle": "//h1[contains(., 'Account Settings')]",
+    "profileHeading": "//h3[contains(., 'Personal Profile')]",
+    "usernameDisplay": "//main//*[contains(text(), '@')]",
+    "emailDisplay": "//main//*[contains(text(), '@') and contains(text(), '.')]",
+    "statusBadge": "//main//*[contains(text(), 'Active & Verified')]",
+    "updatePasswordHeading": "//*[contains(text(), 'Update Password')]",
+    "securityLevelHeading": "//*[contains(text(), 'Security Level')]"
+  }
+}

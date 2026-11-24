@@ -1,0 +1,62 @@
+{
+  "seededAt": "2026-11-23T04:25:16.210Z",
+  "backendUrl": "http://localhost:5000",
+  "user": {
+    "id": 81,
+    "username": "automation_seed_user",
+    "email": "automation_seed_user@yopmail.com"
+  },
+  "journeys": [
+    11,
+    12,
+    13
+  ],
+  "plans": [
+    7,
+    8
+  ],
+  "tasks": [
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82
+  ],
+  "notes": [
+    23,
+    24,
+    25,
+    26,
+    27,
+    28
+  ],
+  "trackers": [
+    2,
+    3
+  ],
+  "attachments": [
+    7,
+    8
+  ],
+  "uploadedFiles": [
+    {
+      "id": 7,
+      "fileName": "sample.pdf",
+      "module": "notes-25",
+      "fileSize": 434
+    },
+    {
+      "id": 8,
+      "fileName": "sample.png",
+      "module": "notes-25",
+      "fileSize": 70
+    }
+  ]
+}

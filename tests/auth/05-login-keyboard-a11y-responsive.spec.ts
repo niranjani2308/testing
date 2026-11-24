@@ -154,7 +154,6 @@ test.describe('Login Page - Keyboard, Accessibility & Responsive UI Tests', () =
   });
 
   test('TC-LOGIN-A11Y-005: Form has noValidate to ensure custom accessible error messaging', async ({ loginPage }) => {
-    const form = loginPage.page.locator('form');
-    await expect(form).toHaveAttribute('novalidate', '');
+    await expect(loginPage.form).toHaveAttribute('novalidate', '');
   });
 });

@@ -1,0 +1,80 @@
+{
+  "name": "Scenario B: Medium / Standard Dataset",
+  "description": "Idempotent realistic dataset for automation test verification",
+  "expectedMetrics": {
+    "totalJourneys": 3,
+    "totalTasks": 12,
+    "completedTasks": 4,
+    "inProgressTasks": 3,
+    "pendingTasks": 5,
+    "overdueTasks": 2,
+    "totalNotes": 4,
+    "archivedNotes": 2,
+    "totalPlans": 2,
+    "totalTrackers": 2,
+    "totalFiles": 2
+  },
+  "user": {
+    "username": "automation_seed_user",
+    "email": "automation_seed_user@yopmail.com"
+  },
+  "journeys": [
+    {
+      "name": "Cloud Infrastructure Migration",
+      "description": "Migrate on-premise infrastructure to AWS ECS, RDS PostgreSQL, and S3",
+      "status": "active"
+    },
+    {
+      "name": "Health & Marathon Conditioning",
+      "description": "16-week half-marathon training regimen and cardiovascular endurance building",
+      "status": "active"
+    },
+    {
+      "name": "Antigravity Test Automation Suite",
+      "description": "Design and execute end-to-end Playwright automation with TypeScript and SelectorHub",
+      "status": "not_started"
+    }
+  ],
+  "plans": [
+    {
+      "title": "DevOps CI/CD Automation Plan",
+      "category": "Technology"
+    },
+    {
+      "title": "Endurance Nutrition Protocol",
+      "category": "Health"
+    }
+  ],
+  "notes": [
+    {
+      "title": "Personal Reflections on Cognitive Flow",
+      "category": "Reflection",
+      "isArchived": false
+    },
+    {
+      "title": "SelectorHub Best Practices for Dynamic SPAs",
+      "category": "Technical",
+      "isArchived": false
+    },
+    {
+      "title": "Weekly Marathon Fueling Strategy",
+      "category": "Fitness",
+      "isArchived": false
+    },
+    {
+      "title": "PostgreSQL Index Optimization Notes",
+      "category": "Database",
+      "isArchived": false
+    },
+    {
+      "title": "Deprecated Q3 On-Premise Server List",
+      "category": "Archive",
+      "isArchived": true
+    },
+    {
+      "title": "Archived Workout Log - October 2026",
+      "category": "Fitness",
+      "isArchived": true
+    }
+  ]
+}

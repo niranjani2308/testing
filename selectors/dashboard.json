@@ -1,46 +1,47 @@
 {
   "dashboardOverview": {
-    "greetingTitle": "h1",
-    "currentDate": "p:has(svg)",
-    "refreshBtn": "button[title='Refresh dashboard metrics']",
-    "exportBtn": "button:has-text('Export')",
-    "newTaskBtn": "header button:has-text('New Task')",
-    "refreshToast": "div:has-text('Dashboard metrics refreshed successfully')",
-    "overviewTab": "button[role='tab']:has-text('Overview')",
-    "analyticsTab": "button[role='tab']:has-text('Analytics')",
-    "overdueBanner": "div.bg-amber-50\\/90, div:has-text('overdue task')",
-    "reviewOverdueBtn": "button:has-text('Review Overdue')",
-    "cardTotalJourneys": "div:has(span:has-text('Journeys')):has(div.text-xl)",
-    "cardTotalTasks": "div:has(span:has-text('Total Tasks')):has(div.text-xl)",
-    "cardCompletedTasks": "div:has(span:has-text('Completed')):has(div.text-xl)",
-    "cardPendingTasks": "div:has(span:has-text('Pending')):has(div.text-xl)",
-    "cardTotalNotes": "div:has(span:has-text('Notes')):has(div.text-xl)",
-    "cardTotalFiles": "div:has(span:has-text('Total Files')):has(div.text-xl)"
+    "greetingTitle": "//main//h1",
+    "currentDate": "//header//p[.//*[name()='svg']]",
+    "refreshBtn": "//button[@title='Refresh dashboard metrics']",
+    "exportBtn": "//button[normalize-space()='Export']",
+    "newTaskBtn": "//header//button[contains(., 'New Task') or contains(., 'Add Task')]",
+    "refreshToast": "//div[contains(., 'Dashboard metrics refreshed successfully')]",
+    "overviewTab": "//nav[@role='tablist']//button[contains(., 'Overview')]",
+    "analyticsTab": "//nav[@role='tablist']//button[contains(., 'Analytics')]",
+    "overdueBanner": "//div[contains(@class, 'bg-amber-50')]",
+    "reviewOverdueBtn": "//button[normalize-space()='Review Overdue']",
+    "cardTotalJourneys": "//div[contains(@class, 'bg-white') and .//span[contains(., 'Journeys')]]",
+    "cardTotalTasks": "//div[contains(@class, 'bg-white') and .//span[contains(., 'Total Tasks')]]",
+    "cardCompletedTasks": "//div[contains(@class, 'bg-white') and .//span[contains(., 'Completed')]]",
+    "cardPendingTasks": "//div[contains(@class, 'bg-white') and .//span[contains(., 'Pending')]]",
+    "cardTotalNotes": "//div[contains(@class, 'bg-white') and .//span[contains(., 'Notes')]]",
+    "cardTotalFiles": "//div[contains(@class, 'bg-white') and .//span[contains(., 'Total Files')]]",
+    "upcomingTasksCheckboxes": "//div[contains(., 'Upcoming Tasks')]//input[@type='checkbox']"
   },
   "analyticsSection": {
-    "filter7Days": "button:has-text('Last 7 Days')",
-    "filter14Days": "button:has-text('Last 14 Days')",
-    "filter30Days": "button:has-text('Last 30 Days')",
-    "filterAllTime": "button:has-text('All Time')",
-    "chartTaskStatus": "div:has-text('Task Status Distribution')",
-    "chartFileType": "div:has-text('File Types')",
-    "chartDailyActivity": "div:has-text('Daily Activity Trends')",
-    "chartJourneyProgress": "div:has-text('Journey Progress')"
+    "filter7Days": "//button[normalize-space()='Last 7 Days']",
+    "filter14Days": "//button[normalize-space()='Last 14 Days']",
+    "filter30Days": "//button[normalize-space()='Last 30 Days']",
+    "filterAllTime": "//button[normalize-space()='All Time']",
+    "chartTaskStatus": "//div[.//h3[contains(., 'Task Status Distribution')]]",
+    "chartFileType": "//div[.//h3[contains(., 'File Upload Distribution')]]",
+    "chartDailyActivity": "//div[.//h3[contains(., 'Daily Activity Trends')]]",
+    "chartJourneyProgress": "//div[.//h3[contains(., 'Journey Progress')]]"
   },
   "drawerSection": {
-    "drawer": "div.fixed.inset-y-0.right-0",
-    "drawerTitle": "h2",
-    "drawerCloseBtn": "div.fixed.inset-y-0.right-0 button:has(svg)",
-    "drawerRecords": "div.space-y-3 > div, div.p-4.rounded-xl"
+    "drawer": "//div[contains(@class, 'fixed') and contains(@class, 'right-0')]",
+    "drawerTitle": "//div[contains(@class, 'fixed') and contains(@class, 'right-0')]//h2",
+    "drawerCloseBtn": "//div[contains(@class, 'fixed') and contains(@class, 'right-0')]//button[.//*[name()='svg']]",
+    "drawerRecords": "//div[contains(@class, 'fixed') and contains(@class, 'right-0')]//div[contains(@class, 'rounded-xl')]"
   },
   "exportModal": {
-    "modal": "div:has-text('Export Dashboard Data')",
-    "scopeCurrentTab": "input[value='CURRENT_TAB']",
-    "scopeFullReport": "input[value='FULL_REPORT']",
-    "formatPdf": "button:has-text('PDF Document')",
-    "formatExcel": "button:has-text('Excel Workbook')",
-    "formatCsv": "button:has-text('CSV Spreadsheet')",
-    "submitExportBtn": "button:has-text('Export & Download')",
-    "closeExportModalBtn": "div.fixed.inset-0 button:has(svg)"
+    "modal": "//div[contains(@class, 'fixed') and .//h3[contains(., 'Export Dashboard')]]",
+    "scopeCurrentTab": "//div[contains(@class, 'fixed')]//button[contains(., 'Current Tab')]",
+    "scopeFullReport": "//div[contains(@class, 'fixed')]//button[contains(., 'Full Report')]",
+    "formatPdf": "//div[contains(@class, 'fixed')]//button[contains(., 'PDF Document')]",
+    "formatExcel": "//div[contains(@class, 'fixed')]//button[contains(., 'Excel (.xlsx)')]",
+    "formatCsv": "//div[contains(@class, 'fixed')]//button[contains(., 'CSV Stream')]",
+    "submitExportBtn": "//div[contains(@class, 'fixed')]//button[contains(., 'Export & Download')]",
+    "closeExportModalBtn": "//div[contains(@class, 'fixed') and .//h3[contains(., 'Export Dashboard')]]//button[.//*[contains(@class, 'lucide-x')] or normalize-space()='Cancel']"
   }
 }

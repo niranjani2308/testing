@@ -6,6 +6,7 @@ import journeys from './journeys.json';
 import notes from './notes.json';
 import tasks from './tasks.json';
 import tracker from './tracker.json';
+import settings from './settings.json';
 
 export class IndexSelectors {
   // Common Locators across the application
@@ -50,4 +51,52 @@ export class IndexSelectors {
   trackerSection = tracker.trackerSection;
   journeyProgressSection = tracker.journeyProgressSection;
   taskPlanProgressSection = tracker.taskPlanProgressSection;
+
+  // Settings Module Locators
+  settingsSection = settings.settingsSection;
+
+  // Dynamic Calling Functions (XPath Builders)
+  getJourneyCardXPath(title?: string): string {
+    return title
+      ? `//div[contains(@class, 'group') and .//h3[contains(., '${title}')]]`
+      : `//div[contains(@class, 'group') and .//h3]`;
+  }
+
+  getNoteCardXPath(title?: string): string {
+    return title
+      ? `//div[contains(@class, 'group') and .//h3[contains(., '${title}')]]`
+      : `//div[contains(@class, 'group') and .//h3]`;
+  }
+
+  getTaskCardXPath(title?: string): string {
+    return title
+      ? `//div[contains(@class, 'divide-y')]//div[.//span[contains(., '${title}')]]`
+      : `//div[contains(@class, 'divide-y')]//div[.//button[contains(@title, 'task')] or .//select]`;
+  }
+
+  getPlanCardXPath(title?: string): string {
+    return title
+      ? `//div[contains(@class, 'border') and contains(@class, 'rounded-xl') and .//h3[contains(., '${title}')]]`
+      : `//div[contains(@class, 'border') and contains(@class, 'rounded-xl') and .//h3]`;
+  }
+
+  getTrackerItemCardXPath(title?: string): string {
+    return title
+      ? `//div[contains(@class, 'group') and .//h3[contains(., '${title}')]]`
+      : `//div[contains(@class, 'group') and .//h3]`;
+  }
+
+  getButtonByTextXPath(text: string): string {
+    return `//button[contains(., '${text}')]`;
+  }
+
+  getHeadingByTextXPath(text: string, level: number = 1): string {
+    return `//h${level}[contains(., '${text}')]`;
+  }
+
+  getTabXPath(name: string): string {
+    return `//button[contains(., '${name}')]`;
+  }
 }
+
+export const selectors = new IndexSelectors();

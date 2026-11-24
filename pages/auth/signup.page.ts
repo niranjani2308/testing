@@ -24,8 +24,10 @@ export class SignupPage {
   readonly successDescription: Locator;
   readonly linkValidityNote: Locator;
   readonly backToLoginBtn: Locator;
+  readonly body: Locator;
 
   constructor(readonly page: Page) {
+    this.body = page.locator(this.selectors.commonFlow.body).first();
     this.authCard = page.locator(this.selectors.signupSection.authCard);
     this.cardTitle = page.locator(this.selectors.signupSection.cardTitle);
     this.cardSubtitle = page.locator(this.selectors.signupSection.cardSubtitle);

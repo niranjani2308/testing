@@ -474,11 +474,10 @@ test.describe('Reset Password Page - Security, Rules & Reset Flow', () => {
   test.describe('8. Unwanted Words & Content Hygiene Verification', () => {
     test('TC-FORGOT-WORDS-001: Forgot Password view must not contain unwanted or debug words', async ({
       forgotPasswordPage,
-      page,
     }) => {
       await forgotPasswordPage.goto();
 
-      const bodyText = await page.locator('body').innerText();
+      const bodyText = await forgotPasswordPage.body.innerText();
       for (const word of authTestData.unwantedWords) {
         const regex = new RegExp(`\\b${word}\\b`, 'i');
         expect(regex.test(bodyText), `Found unwanted word "${word}" in Forgot Password view!`).toBe(false);
@@ -499,7 +498,7 @@ test.describe('Reset Password Page - Security, Rules & Reset Flow', () => {
 
       await resetPasswordPage.goto('mock_valid_token');
 
-      const bodyText = await page.locator('body').innerText();
+      const bodyText = await resetPasswordPage.body.innerText();
       for (const word of authTestData.unwantedWords) {
         const regex = new RegExp(`\\b${word}\\b`, 'i');
         expect(regex.test(bodyText), `Found unwanted word "${word}" in Reset Password view!`).toBe(false);

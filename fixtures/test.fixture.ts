@@ -10,9 +10,14 @@ import { JourneysPage } from '../pages/journeys.page';
 import { NotesPage } from '../pages/notes.page';
 import { TasksPage } from '../pages/tasks.page';
 import { TrackerPage } from '../pages/tracker.page';
+import { SettingsPage } from '../pages/settings.page';
 import { SidebarComponent } from '../pages/components/sidebar.component';
 
-type AppFixtures = {
+import { SeededDataFixture, seededDataFixtureInstance } from './seed-data/seed-data.fixture';
+import { UserGenerator, GeneratedUser } from './users/user-generator';
+
+export type AppFixtures = {
+  // Page Objects
   loginPage: LoginPage;
   signupPage: SignupPage;
   forgotPasswordPage: ForgotPasswordPage;
@@ -24,10 +29,17 @@ type AppFixtures = {
   notesPage: NotesPage;
   tasksPage: TasksPage;
   trackerPage: TrackerPage;
+  settingsPage: SettingsPage;
   sidebar: SidebarComponent;
+
+  // Data & User Fixtures
+  seededData: SeededDataFixture;
+  randomUser: GeneratedUser;
+  userGenerator: typeof UserGenerator;
 };
 
 export const test = base.extend<AppFixtures>({
+  // Page Object Instances
   loginPage: async ({ page }, use) => use(new LoginPage(page)),
   signupPage: async ({ page }, use) => use(new SignupPage(page)),
   forgotPasswordPage: async ({ page }, use) => use(new ForgotPasswordPage(page)),
@@ -39,7 +51,26 @@ export const test = base.extend<AppFixtures>({
   notesPage: async ({ page }, use) => use(new NotesPage(page)),
   tasksPage: async ({ page }, use) => use(new TasksPage(page)),
   trackerPage: async ({ page }, use) => use(new TrackerPage(page)),
+  settingsPage: async ({ page }, use) => use(new SettingsPage(page)),
   sidebar: async ({ page }, use) => use(new SidebarComponent(page)),
+
+  // Seeded Data Fixture (provides access to seed-manifest.json and dataset.json)
+  seededData: async ({}, use) => {
+    await use(seededDataFixtureInstance);
+  },
+
+  // Dynamic Random User Fixture (generates a unique valid user for each test)
+  randomUser: async ({}, use) => {
+    const user = UserGenerator.generateRandomUser();
+    await use(user);
+  },
+
+  // Dynamic User Generator Helper
+  userGenerator: async ({}, use) => {
+    await use(UserGenerator);
+  },
 });
 
 export { expect } from '@playwright/test';
+export { SeededDataFixture } from './seed-data/seed-data.fixture';
+export { UserGenerator, GeneratedUser } from './users/user-generator';

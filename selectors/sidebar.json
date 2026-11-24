@@ -1,21 +1,24 @@
 {
   "sidebarNavigation": {
-    "sidebarContainer": "aside, [role='navigation']",
-    "collapseToggleBtn": "button[aria-label='Collapse Sidebar'], button[aria-label='Expand Sidebar']",
-    "navDashboard": "button:has-text('Dashboard')",
-    "navJourneys": "button:has-text('Journey')",
-    "navNotes": "button:has-text('Notes')",
-    "navTasks": "button:has-text('Tasks')",
-    "navTracker": "button:has-text('Tracker')",
-    "copilotBtn": "button[title='Open AI Copilot'], button:has-text('Ask Copilot')",
-    "userSettingsBtn": "button:has-text('Settings'), button[title*='@']",
-    "userDisplayName": "span.truncate",
-    "signOutBtn": "button[title='Sign Out'], button:has-text('Sign Out')"
+    "sidebarContainer": "//aside[contains(@class, 'left-0') and not(contains(@class, 'md:hidden'))]",
+    "collapseToggleBtn": "//button[@aria-label='Collapse Sidebar' or @aria-label='Expand Sidebar']",
+    "navDashboard": "//aside[contains(@class, 'left-0')]//button[contains(., 'Dashboard')]",
+    "navJourneys": "//aside[contains(@class, 'left-0')]//button[contains(., 'Journey')]",
+    "navNotes": "//aside[contains(@class, 'left-0')]//button[contains(., 'Notes')]",
+    "navTasks": "//aside[contains(@class, 'left-0')]//button[contains(., 'Tasks')]",
+    "navTracker": "//aside[contains(@class, 'left-0')]//button[contains(., 'Tracker')]",
+    "copilotBtn": "//aside[contains(@class, 'left-0')]//button[contains(., 'Ask Copilot') or @title='Open AI Copilot']",
+    "userSettingsBtn": "//aside[contains(@class, 'left-0')]//button[contains(@class, 'rounded-2xl') and (.//*[contains(@class, 'lucide-settings')] or contains(., '@'))]",
+    "userDisplayName": "//aside[contains(@class, 'left-0')]//span[contains(@class, 'truncate')]",
+    "signOutBtn": "//button[@title='Sign Out' or contains(., 'Sign Out')]",
+    "copilotDrawer": "//div[contains(@class, 'fixed') and (contains(., 'LifeTrack AI Copilot') or contains(., 'AI Copilot'))]",
+    "closeCopilotBtn": "//div[contains(@class, 'fixed') and contains(., 'Copilot')]//button[.//*[contains(@class, 'lucide-x')]]",
+    "pageHeader": "//main//h1"
   },
   "mobileNavigation": {
-    "mobileHeader": "div.md\\:hidden",
-    "mobileMenuToggle": "button[aria-label='Toggle Navigation']",
-    "mobileDrawerBackdrop": ".fixed.inset-0.bg-slate-950\\/60",
-    "mobileDrawer": "aside.md\\:hidden"
+    "mobileHeader": "//div[contains(@class, 'md:hidden')]",
+    "mobileMenuToggle": "//button[@aria-label='Toggle Navigation']",
+    "mobileDrawerBackdrop": "//div[contains(@class, 'fixed') and contains(@class, 'bg-slate-950')]",
+    "mobileDrawer": "//aside[contains(@class, 'md:hidden')]"
   }
 }

@@ -556,9 +556,9 @@ test.describe('Create Account (Signup) Page - UI & Field Validation Tests', () =
   // =========================================================================
   test.describe('12. Unwanted Words & Content Hygiene Verification', () => {
     test('TC-SIGNUP-WORDS-001: Page text must not contain debug, placeholder or unwanted words', async ({
-      page,
+      signupPage,
     }) => {
-      const bodyText = await page.locator('body').innerText();
+      const bodyText = await signupPage.body.innerText();
 
       for (const word of authTestData.unwantedWords) {
         // Case-insensitive check with word boundary where applicable

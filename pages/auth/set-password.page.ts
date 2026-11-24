@@ -37,8 +37,12 @@ export class SetPasswordPage {
   readonly expiredAlertTitle: Locator;
   readonly requestNewLinkBtn: Locator;
   readonly backToLoginBtn: Locator;
+  readonly footerText: Locator;
+  readonly signInLink: Locator;
+  readonly body: Locator;
 
   constructor(readonly page: Page) {
+    this.body = page.locator(this.selectors.commonFlow.body).first();
     this.authCard = page.locator(this.selectors.setPasswordSection.authCard);
     this.cardTitle = page.locator(this.selectors.setPasswordSection.cardTitle);
     this.cardSubtitle = page.locator(this.selectors.setPasswordSection.cardSubtitle);
@@ -71,6 +75,8 @@ export class SetPasswordPage {
     this.expiredAlertTitle = page.locator(this.selectors.setPasswordSection.expiredAlertTitle);
     this.requestNewLinkBtn = page.locator(this.selectors.setPasswordSection.requestNewLinkBtn);
     this.backToLoginBtn = page.locator(this.selectors.setPasswordSection.backToLoginBtn);
+    this.footerText = page.locator(this.selectors.setPasswordSection.footerText);
+    this.signInLink = page.locator(this.selectors.setPasswordSection.signInLink);
   }
 
   /**

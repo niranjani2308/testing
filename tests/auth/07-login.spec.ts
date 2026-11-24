@@ -17,10 +17,10 @@ test.describe('Login Page - End-to-End Authentication Tests', () => {
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 10000 });
   });
 
-  test('TC-LOGIN-AUTH-002: Failed login with invalid password displays error alert', async ({ page, loginPage }) => {
+  test('TC-LOGIN-AUTH-002: Failed login with invalid password displays error alert', async ({ loginPage }) => {
     await loginPage.login(username, 'InvalidPassword123!');
 
     // Expect error alert to appear
-    await expect(page.locator(selectors.commonFlow.errorAlert)).toBeVisible();
+    await expect(loginPage.errorAlert).toBeVisible();
   });
 });

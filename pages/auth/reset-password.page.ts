@@ -37,8 +37,10 @@ export class ResetPasswordPage {
   readonly invalidCardSubtitle: Locator;
   readonly invalidAlertTitle: Locator;
   readonly backToLoginBtn: Locator;
+  readonly body: Locator;
 
   constructor(readonly page: Page) {
+    this.body = page.locator(this.selectors.commonFlow.body).first();
     this.authCard = page.locator(this.selectors.resetPasswordSection.authCard);
     this.cardTitle = page.locator(this.selectors.resetPasswordSection.cardTitle);
     this.cardSubtitle = page.locator(this.selectors.resetPasswordSection.cardSubtitle);

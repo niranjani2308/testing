@@ -18,6 +18,7 @@
     "successAlert": "//div[@role='alert' and contains(@class, 'bg-emerald-50')]",
     "loadingSpinner": "//*[@role='status'] | //*[contains(@class, 'animate-spin')]",
     "brandLogo": "//*[text()='LifeTrack AI']",
+    "body": "//body",
     "logout": "//button[@title='Sign Out' or normalize-space()='Sign Out']",
     "logoutBtn": "//button[@title='Sign Out' or normalize-space()='Sign Out']",
     "logoutModal": "//div[contains(., 'Sign Out Confirmation')]",

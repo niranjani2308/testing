@@ -1,0 +1,28 @@
+{
+  "defaultSampleJourney": {
+    "name": "Cloud Infrastructure Migration",
+    "description": "Migrate on-premise infrastructure to AWS ECS, RDS PostgreSQL, and S3",
+    "status": "active"
+  },
+  "sampleJourneys": [
+    {
+      "name": "Cloud Infrastructure Migration",
+      "description": "Migrate on-premise infrastructure to AWS ECS, RDS PostgreSQL, and S3",
+      "status": "active"
+    },
+    {
+      "name": "Health & Marathon Conditioning",
+      "description": "16-week half-marathon training regimen and cardiovascular endurance building",
+      "status": "active"
+    },
+    {
+      "name": "Antigravity Test Automation Suite",
+      "description": "Design and execute end-to-end Playwright automation with TypeScript and SelectorHub",
+      "status": "not_started"
+    }
+  ],
+  "templates": {
+    "dynamicPrefix": "Dynamic Journey",
+    "defaultDescription": "Dynamic test journey created via fixtures"
+  }
+}

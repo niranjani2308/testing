@@ -10,6 +10,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+.auth/
 
 # Logs & Temporary Files
 *.log

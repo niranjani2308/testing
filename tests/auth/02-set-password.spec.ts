@@ -358,11 +358,8 @@ test.describe('Set Password Page - UI, Security & Validation Tests', () => {
     test('TC-SETPW-UI-005: Footer should display "Already verified?" with Sign In link to /login', async ({
       setPasswordPage,
     }) => {
-      const footerText = setPasswordPage.page.locator('//p[contains(., "Already verified?")]');
-      await expect(footerText).toBeVisible();
-
-      const signInLink = setPasswordPage.page.locator('//a[@href="/login"]');
-      await expect(signInLink.first()).toBeVisible();
+      await expect(setPasswordPage.footerText).toBeVisible();
+      await expect(setPasswordPage.signInLink.first()).toBeVisible();
     });
 
     test('TC-SETPW-A11Y-001: Create Password input should have autofocus on page mount', async ({
@@ -595,11 +592,10 @@ test.describe('Set Password Page - UI, Security & Validation Tests', () => {
   test.describe('9. Unwanted Words & Content Hygiene Verification', () => {
     test('TC-SETPW-WORDS-001: Blocked screen must not contain unwanted or debug words', async ({
       setPasswordPage,
-      page,
     }) => {
       await setPasswordPage.goto();
 
-      const bodyText = await page.locator('body').innerText();
+      const bodyText = await setPasswordPage.body.innerText();
       for (const word of authTestData.unwantedWords) {
         const regex = new RegExp(`\\b${word}\\b`, 'i');
         expect(regex.test(bodyText), `Found unwanted word "${word}" on blocked screen!`).toBe(false);
@@ -620,7 +616,7 @@ test.describe('Set Password Page - UI, Security & Validation Tests', () => {
 
       await setPasswordPage.goto('mock_valid_token');
 
-      const bodyText = await page.locator('body').innerText();
+      const bodyText = await setPasswordPage.body.innerText();
       for (const word of authTestData.unwantedWords) {
         const regex = new RegExp(`\\b${word}\\b`, 'i');
         expect(regex.test(bodyText), `Found unwanted word "${word}" on password form!`).toBe(false);

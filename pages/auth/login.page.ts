@@ -1,5 +1,7 @@
 import type { Page, Locator } from '@playwright/test';
+import * as path from 'path';
 import { IndexSelectors } from '../../selectors';
+import { seededDataFixtureInstance } from '../../fixtures/seed-data/seed-data.fixture';
 
 export class LoginPage {
   readonly selectors = new IndexSelectors();
@@ -24,6 +26,8 @@ export class LoginPage {
   readonly successAlert: Locator;
   readonly lockoutBanner: Locator;
   readonly resendVerificationBtn: Locator;
+  readonly form: Locator;
+  readonly body: Locator;
   readonly loadingStatus: Locator;
 
   constructor(readonly page: Page) {
@@ -46,6 +50,8 @@ export class LoginPage {
     this.successAlert = page.locator(this.selectors.loginSection.successAlert);
     this.lockoutBanner = page.locator(this.selectors.loginSection.lockoutBanner);
     this.resendVerificationBtn = page.locator(this.selectors.loginSection.resendVerificationBtn);
+    this.form = page.locator('//form').first();
+    this.body = page.locator(this.selectors.commonFlow.body).first();
     this.loadingStatus = page.locator(this.selectors.loginSection.loadingStatus);
   }
 
@@ -107,15 +113,45 @@ export class LoginPage {
   }
 
   /**
-   * Perform a login action with given or environment credentials
+   * Perform a login action with given or seeded fixture credentials
    */
   async login(
-    username = process.env.APP_USERNAME!,
-    password = process.env.APP_PASSWORD!
+    username = process.env.APP_USERNAME || seededDataFixtureInstance.user.username,
+    password = process.env.APP_PASSWORD || seededDataFixtureInstance.user.password!
   ): Promise<void> {
     await this.fillUsername(username);
     await this.fillPassword(password);
     await this.clickLogin();
+  }
+
+  /**
+   * Ensures the session is authenticated without repeatedly submitting login forms.
+   * If already authenticated (e.g. via storageState), navigates directly to dashboard.
+   * Otherwise falls back to authenticating once.
+   */
+  async ensureLoggedIn(
+    username = process.env.TEST_SEED_USER || process.env.APP_USERNAME || seededDataFixtureInstance.user.username,
+    password = process.env.TEST_SEED_PASSWORD || process.env.APP_PASSWORD || seededDataFixtureInstance.user.password!
+  ): Promise<void> {
+    // If already on /dashboard, return immediately
+    if (this.page.url().includes('/dashboard')) {
+      return;
+    }
+
+    // Try navigating directly to /dashboard using existing storageState/cookie/localStorage
+    await this.page.goto('/dashboard');
+    try {
+      await this.page.waitForURL(/.*dashboard/, { timeout: 4000 });
+      return;
+    } catch {
+      // If redirected away from /dashboard (e.g. to /login), perform login once
+    }
+
+    await this.goto();
+    await this.login(username, password);
+    await this.page.waitForURL(/.*dashboard/, { timeout: 15000 });
+    const authFile = path.resolve(process.cwd(), '.auth/user.json');
+    await this.page.context().storageState({ path: authFile }).catch(() => {});
   }
 
   /**

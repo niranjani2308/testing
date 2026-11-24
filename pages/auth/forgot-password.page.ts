@@ -19,8 +19,10 @@ export class ForgotPasswordPage {
   readonly successDescription: Locator;
   readonly linkValidityNote: Locator;
   readonly returnToLoginBtn: Locator;
+  readonly body: Locator;
 
   constructor(readonly page: Page) {
+    this.body = page.locator(this.selectors.commonFlow.body).first();
     this.authCard = page.locator(this.selectors.forgotPasswordSection.authCard);
     this.cardTitle = page.locator(this.selectors.forgotPasswordSection.cardTitle);
     this.cardSubtitle = page.locator(this.selectors.forgotPasswordSection.cardSubtitle);

@@ -18,6 +18,12 @@ async function globalSetup(): Promise<void> {
       }
     }
   }
+
+  // Ensure .auth directory exists
+  const authDir = path.resolve(process.cwd(), '.auth');
+  if (!fs.existsSync(authDir)) {
+    fs.mkdirSync(authDir, { recursive: true });
+  }
 }
 
 export default globalSetup;

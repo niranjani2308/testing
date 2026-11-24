@@ -190,8 +190,8 @@ test.describe('Login Page - UI Text & Layout Tests', () => {
   // Category 4: Content Hygiene & Unwanted Words Check
   // ==========================================
 
-  test('TC-LOGIN-WORDS-001: Login page content must not contain unwanted, dummy, or debug words', async ({ page }) => {
-    const bodyText = await page.locator('body').innerText();
+  test('TC-LOGIN-WORDS-001: Login page content must not contain unwanted, dummy, or debug words', async ({ loginPage }) => {
+    const bodyText = await loginPage.body.innerText();
 
     for (const word of authTestData.unwantedWords) {
       const regex = new RegExp(`\\b${word}\\b`, 'i');

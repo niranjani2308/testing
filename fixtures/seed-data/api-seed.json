@@ -1,0 +1,19 @@
+{
+  "journey": {
+    "name": "Master Launch Journey",
+    "startDate": "2026-11-01",
+    "description": "Seeded automated test journey"
+  },
+  "tasks": [
+    {
+      "title": "Initial System Verification",
+      "priority": "HIGH",
+      "status": "COMPLETED"
+    },
+    {
+      "title": "Audit User Workflows",
+      "priority": "HIGH",
+      "status": "PENDING"
+    }
+  ]
+}

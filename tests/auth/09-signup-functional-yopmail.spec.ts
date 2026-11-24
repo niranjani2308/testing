@@ -22,6 +22,8 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     loginPage,
     forgotPasswordPage,
     resetPasswordPage,
+    dashboardPage,
+    seededData,
     context,
     page,
   }) => {
@@ -122,7 +124,7 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await page.waitForTimeout(1200);
 
     // Handle navigation to /login (click "Proceed to Login" button or follow auto-redirect)
-    const proceedBtn = page.locator('//button[normalize-space()="Proceed to Login"] | //a[@href="/login"]//button | //a[@href="/login"]');
+    const proceedBtn = setPasswordPage.proceedToLoginBtn;
     try {
       if (await proceedBtn.first().isVisible({ timeout: 4000 })) {
         console.log('👉 [STEP 3] Clicking "Proceed to Login" button...');
@@ -139,12 +141,16 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await page.waitForTimeout(1500);
 
     // -------------------------------------------------------------------------
-    // STEP 4: LOGIN USING CREATED ACCOUNT & VERIFY DASHBOARD
+    // STEP 4: SEED DATA & LOGIN USING CREATED ACCOUNT -> VERIFY DASHBOARD
     // -------------------------------------------------------------------------
     console.log('\n===============================================================');
-    console.log(`🚀 [STEP 4] Logging in as ${randomUser.username}...`);
+    console.log(`🌱 [STEP 4 SEED] Seeding application data before moving to Dashboard...`);
     console.log('===============================================================');
 
+    // Seed test data in the application so Dashboard displays populated cards, charts, and metrics
+    await dashboardPage.seedDashboardData();
+
+    console.log(`🚀 [STEP 4] Logging in as ${randomUser.username}...`);
     console.log(`✍️ [STEP 4] Typing username: ${randomUser.username}`);
     await loginPage.fillUsername(randomUser.username);
     await page.waitForTimeout(600);
@@ -158,7 +164,26 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
 
     // Verify dashboard redirect and access
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-    console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard with initial password!');
+    await dashboardPage.verifyDashboardLoaded();
+
+    // Verify seeded summary metrics
+    console.log('📊 [STEP 4] Verifying seeded metrics on Dashboard...');
+    const seedData = seededData.getDashboardSeedData();
+    await dashboardPage.verifySummaryMetrics({
+      journeys: seedData.overview.summary.totalJourneys,
+      tasks: seedData.overview.summary.totalTasks,
+      completed: seedData.overview.summary.completedTasks,
+      pending: seedData.overview.summary.pendingTasks,
+      notes: seedData.overview.summary.totalNotes,
+      files: seedData.overview.summary.totalUploadedFiles,
+    });
+    console.log('✅ [STEP 4] Summary cards verified: 3 Journeys, 12 Tasks, 5 Completed, 4 Pending, 6 Notes, 4 Files.');
+
+    // Verify overdue banner
+    await dashboardPage.verifyOverdueBanner(seedData.overview.overdueTasks.length);
+    console.log('✅ [STEP 4] Overdue banner verified: 1 overdue task.');
+
+    console.log('🎉 [STEP 4 COMPLETE] Successfully logged into Dashboard with seeded data!');
     console.log('===============================================================\n');
     await page.waitForTimeout(3000);
 
@@ -183,14 +208,19 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await expect(forgotPasswordPage.successTitle).toContainText(
       authTestData.forgotPasswordUiText.successTitle,
     );
-    console.log('✅ [STEP 5 COMPLETE] Password reset link dispatched. Waiting 5s for delivery...');
-    await page.waitForTimeout(5000);
+    console.log('✅ [STEP 5 COMPLETE] Password reset link dispatched. Waiting 20s for delivery & YOPmail cooldown...');
+    // Wait longer here: YOPmail enforces rate-limits on rapid successive visits.
+    // The first visit was during Step 2 (verification email). Without a sufficient
+    // gap, visiting YOPmail again triggers a "Please wait before continuing" cooldown.
+    // 20s gives YOPmail enough breathing room before the second inbox check.
+    await page.waitForTimeout(20000);
 
     // -------------------------------------------------------------------------
     // STEP 6: YOPMAIL — RETRIEVE RESET LINK & SET NEW PASSWORD
     // -------------------------------------------------------------------------
     console.log('\n===============================================================');
     console.log(`🚀 [STEP 6] Opening Yopmail to retrieve reset link: ${randomUser.yopmailInbox}`);
+    console.log('(YOPmail rate-limit cooldown handled automatically if triggered)');
     console.log('===============================================================');
 
     await yopmail.gotoInbox(randomUser.yopmailInbox);
@@ -228,7 +258,7 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await page.waitForTimeout(1200);
 
     // Click Proceed to Login
-    const resetProceedBtn = page.locator('//button[normalize-space()="Proceed to Login"] | //a[@href="/login"]//button | //a[@href="/login"]');
+    const resetProceedBtn = resetPasswordPage.proceedToLoginBtn;
     try {
       if (await resetProceedBtn.first().isVisible({ timeout: 4000 })) {
         console.log('👉 [STEP 6] Clicking "Proceed to Login" button...');
@@ -260,13 +290,20 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
 
     // Positive check: Login with NEW reset password -> MUST SUCCEED
     console.log(`🚀 [STEP 7.2] Logging in with NEW reset password (${newPassword})...`);
+    // Ensure seeded data is active on dashboard reload
+    await dashboardPage.seedDashboardData();
     await loginPage.fillUsername(randomUser.username);
     await loginPage.fillPassword(newPassword);
     await loginPage.clickLogin();
 
-    // Verify successful dashboard redirect
+    // Verify successful dashboard redirect and populated state
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
-    console.log('🎉 [STEP 7.2 COMPLETE] Successfully logged into Dashboard with NEW reset password!');
+    await dashboardPage.verifyDashboardLoaded();
+    await dashboardPage.verifySummaryMetrics({
+      journeys: seedData.overview.summary.totalJourneys,
+      tasks: seedData.overview.summary.totalTasks,
+    });
+    console.log('🎉 [STEP 7.2 COMPLETE] Successfully logged into Dashboard with NEW reset password and verified metrics!');
     console.log('===============================================================\n');
 
     // Keep dashboard open and visible on screen for 10 seconds so the user can verify
@@ -342,17 +379,20 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await loginPage.clickLogin();
 
     // Should show error alert, NOT navigate to dashboard
-    const errorAlert = page.locator('//div[@role="alert" and contains(@class, "bg-red-50")]');
-    await expect(errorAlert).toBeVisible({ timeout: 5000 });
+    await expect(loginPage.errorAlert).toBeVisible({ timeout: 5000 });
     await expect(page).not.toHaveURL(/.*dashboard/);
   });
 
   test('TC-SIGNUP-E2E-005: (Positive) After activation, logging in with email instead of username should succeed', async ({
     loginPage,
+    dashboardPage,
+    seededData,
     page,
   }) => {
     test.skip(!activatedUser, 'Skipped: requires TC-SIGNUP-E2E-001 to have activated a user');
+    const seedData = seededData.getDashboardSeedData();
 
+    await dashboardPage.seedDashboardData();
     await page.goto('/login');
     await expect(loginPage.authCard).toBeVisible();
 
@@ -362,6 +402,10 @@ test.describe('Create Account - End-to-End User Flow & Verification', () => {
     await loginPage.clickLogin();
 
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+    await dashboardPage.verifyDashboardLoaded();
+    await dashboardPage.verifySummaryMetrics({
+      journeys: seedData.overview.summary.totalJourneys,
+    });
   });
 
   test('TC-SIGNUP-E2E-006: (Negative) Re-using the same verification link after activation should show expired/used token error', async ({
